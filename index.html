@@ -1,0 +1,2978 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>掼蛋组排练习</title>
+<style>
+/* Claude-inspired design system */
+:root {
+  --bg: #F5F4ED;
+  --bg-panel: #FAF9F4;
+  --bg-elevated: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --ink: #1F1E1C;
+  --ink-muted: #6B6A66;
+  --ink-faint: #A8A69E;
+  --line: #E6E4DC;
+  --line-strong: #D4D1C6;
+  --accent: #C96442;
+  --accent-soft: #E8B39B;
+  --accent-bg: #F7E8DF;
+  --good: #5B8E5A;
+  --good-bg: #E8F0E6;
+  --warn: #B87B2A;
+  --warn-bg: #F5E9D4;
+  --bad: #B04A3C;
+  --bad-bg: #F7E3DE;
+  --card-red: #C62828;
+  --card-black: #1F1E1C;
+  --font-ui: ui-sans-serif, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-serif: 'Tiempos Text', 'Source Serif Pro', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --sh-1: 0 1px 2px rgba(30,28,25,0.06);
+  --sh-2: 0 2px 8px rgba(30,28,25,0.08);
+  --sh-3: 0 8px 24px rgba(30,28,25,0.14);
+  --sh-card: 0 4px 12px rgba(30,28,25,0.12), 0 1px 2px rgba(30,28,25,0.08);
+}
+[data-theme="dark"] {
+  --bg: #262624;
+  --bg-panel: #2E2D2B;
+  --bg-elevated: #363532;
+  --bg-card: #FFFFFF;
+  --ink: #F2F1EC;
+  --ink-muted: #B8B6B0;
+  --ink-faint: #8A8982;
+  --line: #3F3E3B;
+  --line-strong: #55534F;
+  --accent: #D97757;
+  --accent-soft: #A8654B;
+  --accent-bg: #3A2B22;
+  --good: #8CBF85;
+  --good-bg: #2D3A2B;
+  --warn: #D9A451;
+  --warn-bg: #3D3120;
+  --bad: #D97B6C;
+  --bad-bg: #3E2722;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-ui);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: 1px solid var(--line-strong);
+  background: var(--bg-elevated);
+  color: var(--ink);
+  padding: 8px 14px;
+  border-radius: var(--r-md);
+  transition: all 0.15s ease;
+}
+button:hover:not(:disabled) { background: var(--bg-panel); border-color: var(--ink-muted); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+button.primary { background: var(--accent); color: white; border-color: var(--accent); }
+button.primary:hover:not(:disabled) { background: #B55737; border-color: #B55737; }
+button.ghost { background: transparent; border-color: transparent; color: var(--ink-muted); }
+button.ghost:hover:not(:disabled) { background: var(--bg-panel); color: var(--ink); }
+button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
+
+/* ========= App Layout ========= */
+.app { display: flex; flex-direction: column; min-height: 100vh; position: relative; }
+
+.app-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  gap: 24px;
+}
+.app-title {
+  font-family: var(--font-serif);
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.header-tabs {
+  display: flex;
+  gap: 2px;
+  justify-self: start;
+  margin-left: 16px;
+}
+.header-tabs .tab {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: var(--r-sm);
+  position: relative;
+  white-space: nowrap;
+}
+.header-tabs .tab:hover { background: var(--bg-panel); color: var(--ink); }
+.header-tabs .tab.active { color: var(--ink); font-weight: 600; }
+.header-tabs .tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -14px;
+  left: 12px;
+  right: 12px;
+  height: 2px;
+  background: var(--accent);
+}
+.header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-self: end;
+  flex-wrap: wrap;
+}
+.timer {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  padding: 4px 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.timer.warning { color: var(--warn); border-color: var(--warn); }
+.timer.urgent { color: var(--bad); border-color: var(--bad); }
+
+/* ========= Main ========= */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 28px 320px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  gap: 18px;
+}
+
+/* ========= Groups ========= */
+.groups-section {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 16px 20px;
+  min-height: 180px;
+}
+.groups-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.groups-title { font-family: var(--font-serif); font-size: 16px; font-weight: 500; }
+.groups-title .count { color: var(--ink-muted); margin-left: 8px; font-size: 13px; }
+
+/* Live score progress bar */
+.live-score-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.live-score-bar .label { font-size: 12px; white-space: nowrap; }
+.progress-track {
+  width: 120px;
+  height: 6px;
+  background: var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease, background 0.4s ease;
+}
+.live-score-num {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  min-width: 32px;
+}
+.live-score-max { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+
+.groups-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-height: 120px;
+  align-items: flex-start;
+}
+.groups-empty {
+  color: var(--ink-faint);
+  font-style: italic;
+  font-size: 14px;
+  padding: 30px 0;
+  text-align: center;
+  width: 100%;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: var(--r-md);
+}
+.group-chip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 120px;
+  box-shadow: var(--sh-1);
+  transition: all 0.15s ease;
+}
+.group-chip.invalid { border-color: var(--bad); background: var(--bad-bg); }
+.group-chip:hover { box-shadow: var(--sh-2); transform: translateY(-1px); }
+.group-chip .cards-row { display: flex; gap: 2px; flex-wrap: wrap; }
+.group-chip-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.group-chip-label { font-weight: 600; color: var(--ink); }
+.group-chip-label.bad { color: var(--bad); }
+.group-chip-dismantle {
+  background: transparent;
+  border: none;
+  color: var(--ink-muted);
+  font-size: 11px;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: var(--r-sm);
+}
+.group-chip-dismantle:hover { background: var(--bg-panel); color: var(--ink); }
+
+/* ========= Selection preview ========= */
+.selection-preview {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-soft);
+  border-radius: var(--r-lg);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.selection-preview .info { display: flex; flex-direction: column; gap: 2px; }
+.selection-preview .primary-label { font-size: 15px; font-weight: 600; color: var(--ink); }
+.selection-preview .primary-label.bad { color: var(--bad); }
+.selection-preview .desc { font-size: 13px; color: var(--ink-muted); max-width: 620px; }
+.selection-preview .actions { display: flex; gap: 8px; }
+
+/* ========= Hand (bottom fixed) ========= */
+.hand-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 280px;
+  pointer-events: none;
+  z-index: 15;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 14px;
+}
+.hand-grid {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0 40px 20px;
+  gap: 4px;
+  user-select: none;
+}
+.hand-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 0 0 auto;
+  width: 66px;
+}
+.hand-col .stack-card {
+  position: relative;
+  margin-top: -52px;
+  cursor: pointer;
+  transition: filter 0.15s ease, box-shadow 0.15s ease;
+}
+.hand-col .stack-card:first-child { margin-top: 0; }
+.hand-col .stack-card.selected .card {
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 3px rgba(201,100,66,0.2), 0 2px 4px rgba(30,28,25,0.12);
+  background: #FDEADF;
+}
+.hand-col .stack-card:hover { z-index: 50; }
+.hand-col .stack-card:hover .card {
+  filter: brightness(1.04);
+  box-shadow: 0 6px 14px rgba(30,28,25,0.22), 0 1px 3px rgba(30,28,25,0.1);
+}
+
+/* Card base */
+.card {
+  width: 64px;
+  height: 92px;
+  border-radius: 6px;
+  background: var(--bg-card);
+  border: 1px solid #C0BDB1;
+  box-shadow: 0 2px 4px rgba(30,28,25,0.15), 0 1px 2px rgba(30,28,25,0.08);
+  position: relative;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 6px 6px;
+  font-family: var(--font-ui);
+  transition: transform 0.18s cubic-bezier(.2,.8,.2,1), box-shadow 0.18s ease, border-color 0.15s ease;
+  transform-origin: center bottom;
+}
+.card .rank-row {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-weight: 700;
+  line-height: 1;
+}
+.card .rank {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: ui-sans-serif, -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  letter-spacing: -0.02em;
+}
+.card .rank-suit-small { font-size: 16px; line-height: 1; }
+.card .big-suit {
+  font-size: 32px;
+  line-height: 1;
+  margin-top: auto;
+  margin-bottom: 2px;
+  align-self: center;
+}
+.card.red .rank, .card.red .rank-suit-small, .card.red .big-suit { color: var(--card-red); }
+.card.black .rank, .card.black .rank-suit-small, .card.black .big-suit { color: var(--card-black); }
+.card.wild {
+  background: linear-gradient(135deg, #FFF 0%, #FDEEE7 100%);
+  border-color: var(--accent);
+}
+.card.wild::after {
+  content: "级";
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  font-size: 9px;
+  color: var(--accent);
+  background: white;
+  padding: 1px 3px;
+  border-radius: 3px;
+  border: 1px solid var(--accent);
+  font-family: var(--font-ui);
+  font-weight: 600;
+}
+
+/* Joker — uses standard rank-row + big-suit layout, color via .card.red/.card.black */
+.card.joker .rank-suit-small { display: inline-flex; align-items: center; vertical-align: middle; }
+.card.joker .big-suit { display: flex; align-items: center; justify-content: center; }
+
+/* Card sizes */
+.card.sm { width: 54px; height: 78px; padding: 3px 5px 4px; }
+.card.sm .rank { font-size: 18px; }
+.card.sm .rank-suit-small { font-size: 13px; }
+.card.sm .big-suit { font-size: 24px; }
+.hand-col:has(.card.sm) .stack-card { margin-top: -44px; }
+.hand-col:has(.card.sm) .stack-card:first-child { margin-top: 0; }
+
+.card.xs { width: 32px; height: 42px; padding: 2px 3px 3px; border-radius: 4px; }
+.card.xs .rank { font-size: 13px; font-weight: 700; }
+.card.xs .rank-suit-small { font-size: 10px; }
+.card.xs .big-suit { font-size: 14px; margin-bottom: 0; }
+.card.xs.wild::after { font-size: 7px; padding: 0 2px; top: 2px; right: 2px; }
+
+/* History table */
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: auto;
+}
+.history-table th {
+  text-align: left;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.history-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+  overflow: hidden;
+}
+.history-table tr:last-child td { border-bottom: none; }
+.history-table tr:hover td { background: var(--bg-elevated); }
+.history-table .score-cell {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 14px;
+}
+.history-table .action-cell { display: flex; gap: 6px; align-items: center; justify-content: flex-end; white-space: nowrap; }
+.history-table .action-cell button { opacity: 0; transition: opacity 0.15s; }
+.history-table tbody tr:hover .action-cell button { opacity: 1; }
+.score-bar-inline {
+  display: inline-block;
+  width: 60px;
+  height: 4px;
+  background: var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+.score-bar-inline-fill { height: 100%; border-radius: 2px; }
+
+/* History responsive wrappers */
+.history-table-wrap { display: block; }
+
+/* Mobile history list */
+.history-mobile-list {
+  display: none;
+  flex-direction: column;
+  gap: 0;
+}
+.hist-mobile-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--line);
+  gap: 10px;
+}
+.hist-mobile-row:last-child { border-bottom: none; }
+.hist-mobile-score {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 36px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.hist-mobile-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.hist-mobile-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.hist-mobile-secondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  flex-wrap: wrap;
+}
+.hist-mobile-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+/* Stats grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-block {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-block .stat-icon { display: flex; align-items: center; line-height: 1; margin-bottom: 4px; color: var(--ink-muted); }
+.stat-block .stat-num {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+.stat-block .stat-lbl {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+}
+.stat-block .stat-sub { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+.stat-block .stat-track {
+  height: 4px;
+  background: var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.stat-block .stat-fill { height: 100%; border-radius: 2px; }
+.score-dist { display: flex; flex-direction: column; gap: 8px; }
+.dist-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.dist-label { width: 110px; color: var(--ink-muted); flex-shrink: 0; }
+.dist-bar-wrap { flex: 1; height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
+.dist-bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; }
+.dist-count { font-family: var(--font-mono); font-size: 12px; color: var(--ink-muted); min-width: 28px; text-align: right; }
+
+/* Selection pill + combo info */
+.sel-stack {
+  position: fixed;
+  bottom: 210px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 16;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  animation: pillIn 0.18s ease;
+}
+.sel-combo-info {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--sh-2);
+  white-space: nowrap;
+}
+.sel-combo-info.valid { color: var(--ink); }
+.sel-combo-info.invalid { color: var(--bad); border-color: var(--bad); background: var(--bad-bg); }
+.sel-pill {
+  background: var(--accent);
+  color: white;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(201,100,66,0.4);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+.sel-pill button {
+  background: white;
+  color: var(--accent);
+  border: none;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+.sel-pill button:disabled { opacity: 0.45; cursor: not-allowed; }
+.sel-pill button.ghost-light {
+  background: transparent;
+  color: rgba(255,255,255,0.9);
+  padding: 3px 8px;
+  border: none;
+}
+.sel-pill button.ghost-light:hover { background: rgba(255,255,255,0.18); color: #fff; }
+@keyframes pillIn { from { opacity: 0; transform: translate(-50%, 8px); } }
+
+/* Lasso */
+.lasso-box {
+  position: fixed;
+  border: 1.5px solid var(--accent);
+  background: rgba(201,100,66,0.12);
+  pointer-events: none;
+  z-index: 30;
+  border-radius: 2px;
+}
+
+/* ========= Tweaks Panel ========= */
+.tweaks-panel {
+  position: fixed;
+  top: 72px;
+  right: 16px;
+  width: 300px;
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 18px;
+  box-shadow: var(--sh-3);
+  z-index: 50;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+.tweaks-panel h3 { margin: 0 0 12px; font-family: var(--font-serif); font-size: 16px; font-weight: 500; }
+.tweak-row { margin-bottom: 14px; }
+.tweak-row label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+.tweak-row .segmented {
+  display: flex;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 2px;
+}
+.tweak-row .segmented button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.tweak-row .segmented button.active { background: var(--accent); color: white; }
+.tweak-row select, .tweak-row input[type="number"] {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--bg-elevated);
+  color: var(--ink);
+  font: inherit;
+}
+.tweak-row .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); }
+
+/* ========= Modal ========= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(30,28,25,0.35);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  padding-bottom: max(30px, env(safe-area-inset-bottom));
+}
+.modal {
+  background: var(--bg);
+  border-radius: var(--r-lg);
+  max-width: 1100px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--sh-3);
+}
+.modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title { font-family: var(--font-serif); font-size: 20px; font-weight: 500; }
+.modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+.modal-footer {
+  padding: 14px 24px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.sug-group {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.sug-group .label { font-weight: 600; margin-bottom: 4px; color: var(--ink); }
+.sug-group .mini-cards { display: flex; gap: 2px; flex-wrap: wrap; }
+.reasons { background: var(--bg-panel); border-radius: var(--r-md); padding: 12px 14px; font-size: 13px; }
+.reasons .reason { display: flex; gap: 8px; padding: 3px 0; align-items: flex-start; }
+.reasons .reason.good { color: var(--good); }
+.reasons .reason.bad { color: var(--bad); }
+.reasons .reason.neutral { color: var(--ink-muted); }
+.reasons .reason .bullet { display: inline-block; width: 16px; font-family: var(--font-mono); flex-shrink: 0; }
+
+/* ========= Tutorial ========= */
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30,28,25,0.6);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+.tutorial-card {
+  background: var(--bg);
+  border-radius: var(--r-lg);
+  max-width: 540px;
+  width: 100%;
+  padding: 30px 34px;
+  box-shadow: var(--sh-3);
+}
+.tutorial-card h2 { font-family: var(--font-serif); font-weight: 500; margin: 0 0 12px; font-size: 24px; }
+.tutorial-card .step-num { font-family: var(--font-mono); color: var(--accent); font-size: 13px; margin-bottom: 6px; }
+.tutorial-card p { margin: 0 0 10px; color: var(--ink-muted); line-height: 1.6; }
+.tutorial-card .dots { display: flex; gap: 6px; margin: 16px 0 22px; }
+.tutorial-card .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); }
+.tutorial-card .dot.active { background: var(--accent); }
+.tutorial-actions { display: flex; gap: 8px; justify-content: space-between; align-items: center; }
+
+/* ========= History / Stats ========= */
+.secondary-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 14px 18px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.stat-pill { display: flex; flex-direction: column; gap: 2px; }
+.stat-pill .num { font-family: var(--font-mono); font-size: 18px; font-weight: 600; }
+.stat-pill .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-muted); }
+.history-list { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+.history-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 80px 80px;
+  gap: 12px;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+}
+.history-row:hover { background: var(--bg-elevated); }
+.history-row .diff { font-family: var(--font-mono); font-size: 11px; color: var(--ink-muted); }
+.history-row .score { font-family: var(--font-mono); font-weight: 600; }
+
+/* Hand sidebar (undo/reset + flush helper) */
+.hand-sidebar {
+  position: fixed;
+  right: 16px;
+  bottom: 28px;
+  z-index: 16;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 8px 6px;
+  box-shadow: var(--sh-2);
+}
+.sidebar-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.sidebar-btn:hover:not(:disabled) { background: var(--bg-panel); color: var(--ink); border-color: var(--line); }
+.sidebar-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.sidebar-btn.suit-btn { font-size: 18px; }
+.sidebar-btn.active { background: var(--accent-bg); border-color: var(--accent-soft); color: var(--ink); }
+.sidebar-divider { width: 22px; height: 1px; background: var(--line); margin: 2px 0; }
+.sidebar-section-label {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  text-align: center;
+}
+.sidebar-level-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  text-align: center;
+  padding: 2px 0;
+  line-height: 1.2;
+}
+/* Dimmed card when flush helper active */
+.stack-card.dimmed .card {
+  opacity: 0.28;
+  filter: saturate(0.2);
+  transition: opacity 0.2s ease, filter 0.2s ease;
+}
+.stack-card.flush-lit .card {
+  box-shadow: 0 0 0 2px rgba(201,100,66,0.35), var(--sh-card);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--bg);
+  padding: 10px 18px;
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-3);
+  font-size: 14px;
+  z-index: 300;
+  animation: toastIn 0.25s ease, toastOut 0.25s ease 2.5s forwards;
+}
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, -10px); } }
+@keyframes toastOut { to { opacity: 0; transform: translate(-50%, -10px); } }
+
+/* ===== Mobile Action Bar ===== */
+.mobile-action-bar {
+  display: none;
+  position: fixed;
+  left: 0; right: 0;
+  height: 46px;
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--line);
+  z-index: 16;
+  padding: 0 10px;
+  align-items: center;
+  gap: 3px;
+  box-shadow: 0 -1px 0 var(--line);
+}
+.mob-btn {
+  width: 34px; height: 34px; padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-panel);
+  font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--ink-muted);
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.mob-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.mob-btn.active { background: var(--accent-bg); border-color: var(--accent-soft); color: var(--ink); }
+.mob-btn.primary-mob { background: var(--accent); color: #fff; border-color: var(--accent); font-size: 12px; width: auto; padding: 0 10px; font-weight: 600; }
+.mob-btn.primary-mob:hover:not(:disabled) { background: #B55737; border-color: #B55737; }
+.mob-btn.outline-mob { font-size: 12px; width: auto; padding: 0 8px; }
+.mob-divider { width: 1px; height: 20px; background: var(--line); flex-shrink: 0; margin: 0 2px; }
+.mob-spacer { flex: 1; }
+.mob-level {
+  font-size: 11px; font-weight: 700; color: var(--ink-muted);
+  font-family: var(--font-mono); white-space: nowrap;
+  padding: 0 4px;
+}
+.mob-timer {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--ink-muted); padding: 0 2px;
+}
+.mob-timer.warning { color: var(--warn); }
+.mob-timer.urgent { color: var(--bad); }
+
+/* ===== Mobile Bottom Nav ===== */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: calc(54px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--bg-elevated);
+  border-top: 1px solid var(--line);
+  z-index: 20;
+}
+.mob-nav-btn {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 1px; border: none; background: transparent;
+  color: var(--ink-faint); font-size: 10px; cursor: pointer;
+  padding: 4px 0; line-height: 1.3;
+  font-family: var(--font-ui);
+  transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mob-nav-btn.active { color: var(--accent); }
+.mob-nav-icon { display: block; }
+
+/* ===== Responsive: tablet ===== */
+@media (max-width: 820px) {
+  .tweaks-panel { width: calc(100vw - 32px); top: 64px; }
+  .main { padding: 16px 16px 280px; }
+  .app-header { padding: 12px 16px; }
+  .header-tabs { margin-left: 8px; }
+  .header-tabs .tab { padding: 6px 10px; }
+}
+
+/* ===== Responsive: mobile ===== */
+@media (max-width: 640px) {
+  /* Header: compact, tabs + actions move to bottom */
+  .app-header { padding: 10px 14px; gap: 8px; min-height: 50px; }
+  .header-tabs { display: none; }
+  .desktop-only { display: none !important; }
+
+  /* Main content */
+  .main { padding: 12px 12px 310px; gap: 12px; }
+
+  /* Groups section: compact */
+  .groups-section { padding: 10px 12px; min-height: 80px; }
+  .groups-header { flex-wrap: wrap; gap: 6px; }
+  .live-score-bar .label { display: none; }
+  .progress-track { width: 70px; }
+  .group-chip { padding: 7px 8px; }
+  .groups-list { gap: 6px; }
+
+  /* Hand: sits above action bar + bottom nav (46 + 54 = 100px) */
+  .hand-container {
+    bottom: 100px;
+    height: 190px;
+    padding-bottom: 4px;
+  }
+  .hand-grid {
+    padding: 0 8px 8px;
+    gap: 2px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .hand-grid::-webkit-scrollbar { display: none; }
+  .hand-col { width: 48px; }
+  .hand-col .stack-card { margin-top: -44px; }
+  .hand-col .stack-card:first-child { margin-top: 0; }
+  .hand-col:has(.card.sm) .stack-card { margin-top: -38px; }
+
+  /* Force sm cards in hand on mobile */
+  .hand-grid .card { width: 52px; height: 75px; padding: 3px 4px 4px; }
+  .hand-grid .card .rank { font-size: 18px; }
+  .hand-grid .card .rank-suit-small { font-size: 12px; }
+  .hand-grid .card .big-suit { font-size: 22px; }
+  .hand-grid .card .level-corner { font-size: 8px; bottom: 3px; right: 3px; }
+  .hand-grid .card.joker .rank { font-size: 16px; }
+
+  /* Selection pill: above hand */
+  .sel-stack { bottom: 298px; }
+
+  /* Hide desktop sidebar */
+  .hand-sidebar { display: none; }
+
+  /* Show mobile components */
+  .mobile-action-bar { display: flex; bottom: 54px; }
+  .mobile-bottom-nav { display: flex; }
+
+  /* Modals: full-width */
+  .modal { width: calc(100vw - 20px) !important; max-width: none !important; margin: 10px; border-radius: var(--r-lg); }
+  .modal-header { padding: 14px 16px; }
+  .modal-body { padding: 12px 16px; max-height: 62vh; overflow-y: auto; }
+  .modal-footer { padding: 10px 16px; }
+
+  /* Suggestions modal: single-column on mobile */
+  .sug-two-col { grid-template-columns: 1fr !important; }
+  .sug-strat-tabs { flex-wrap: wrap; }
+
+  /* Tweaks panel: full width */
+  .tweaks-panel { width: calc(100vw - 28px); right: 14px; top: 56px; }
+
+  /* Auth menu */
+  .auth-menu { right: 0; }
+
+  /* Tutorial: tighter padding */
+  .tutorial-overlay { padding: 16px; }
+  .tutorial-card { padding: 22px 20px; }
+  .tutorial-card h2 { font-size: 20px; }
+
+  /* History: hide table, show card list on mobile */
+  .history-table-wrap { display: none !important; }
+  .history-mobile-list { display: flex !important; }
+
+  /* Stats grid: smaller blocks on mobile */
+  .stats-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+  .stat-block { padding: 10px 12px; }
+  .stat-block .stat-icon { font-size: 18px; }
+  .stat-block .stat-num { font-size: 24px; }
+
+  /* Lasso disabled on touch */
+  .lasso-box { display: none; }
+
+  /* Toast position */
+  .toast { top: 60px; font-size: 13px; padding: 8px 14px; }
+
+  /* Guest screen */
+  .guest-hero h1 { font-size: 24px; }
+  .guest-hero p { font-size: 14px; }
+  .demo-stage { height: 150px; margin-bottom: 24px; }
+  .guest-screen { padding: 20px 16px 32px; }
+  .guest-screen > div:last-child { flex-direction: column; align-items: center; gap: 8px; }
+  .guest-screen > div:last-child button { width: 100%; max-width: 280px; }
+
+  /* Main padding for non-play tabs (no hand/action bar) */
+  .main-no-hand { padding-bottom: 70px !important; }
+}
+/* ========= Auth ========= */
+.auth-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  font-family: var(--font-ui);
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+.auth-input:focus { outline: none; border-color: var(--accent); }
+.auth-badge {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  cursor: pointer; flex-shrink: 0;
+  user-select: none;
+  transition: opacity 0.15s;
+}
+.auth-badge:hover { opacity: 0.8; }
+.auth-menu {
+  position: absolute; top: 44px; right: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-3);
+  padding: 8px;
+  min-width: 260px;
+  z-index: 60;
+}
+.auth-menu-email { font-size: 12px; color: var(--ink-muted); padding: 4px 8px 8px; border-bottom: 1px solid var(--line); margin-bottom: 6px; word-break: break-all; }
+.auth-menu button { width: 100%; text-align: left; }
+
+/* ========= Guest / Landing ========= */
+.guest-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px 48px;
+  gap: 0;
+  overflow: hidden;
+}
+.guest-hero {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.guest-hero h1 {
+  font-family: var(--font-serif);
+  font-size: 32px;
+  font-weight: 500;
+  margin: 0 0 12px;
+  letter-spacing: -0.02em;
+}
+.guest-hero p {
+  color: var(--ink-muted);
+  font-size: 15px;
+  line-height: 1.75;
+  max-width: 380px;
+  margin: 0 auto;
+}
+.demo-stage {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: 200px;
+  margin-bottom: 36px;
+  flex-shrink: 0;
+}
+.demo-card-wrap {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform-origin: bottom center;
+  transition: bottom 0.45s cubic-bezier(0.34,1.56,0.64,1), filter 0.4s ease;
+}
+.demo-card-wrap.demo-lit {
+  filter: drop-shadow(0 0 10px rgba(201,100,66,0.75));
+}
+@keyframes demoIn {
+  from { opacity: 0; transform: translateX(-50%) rotate(var(--a)) translateY(40px); }
+  to   { opacity: 1; transform: translateX(-50%) rotate(var(--a)) translateY(0); }
+}
+.demo-badge {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  padding: 6px 18px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: badgeIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes badgeIn {
+  from { opacity: 0; transform: translateX(-50%) scale(0.7) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) scale(1)   translateY(0); }
+}
+.guest-features {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.guest-feature {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.guest-feature .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.guest-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 260px;
+  align-items: stretch;
+}
+.guest-cta button.primary { padding: 13px 0; font-size: 15px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+// ============ 掼蛋牌型识别与牌力评估引擎 ============
+const SUITS = ['S','H','D','C'];
+const SUIT_NAMES = { S:'♠', H:'♥', D:'♦', C:'♣' };
+const SUIT_COLORS = { S:'black', H:'red', D:'red', C:'black' };
+const RANK_NAMES = { 2:'2',3:'3',4:'4',5:'5',6:'6',7:'7',8:'8',9:'9',10:'10',11:'J',12:'Q',13:'K',14:'A' };
+
+function cardDisplay(card) {
+  if (card.suit === 'JOKER') return card.jokerType === 'big' ? '大王' : '小王';
+  return SUIT_NAMES[card.suit] + RANK_NAMES[card.rank];
+}
+function cardShort(card) {
+  if (card.suit === 'JOKER') return card.jokerType === 'big' ? 'BJ' : 'SJ';
+  return card.suit + card.rank;
+}
+function sortOrder(card, level) {
+  if (card.suit === 'JOKER') return card.jokerType === 'big' ? 17 : 16;
+  if (card.rank === level) return 15;
+  return card.rank;
+}
+function sortHand(cards, level) {
+  return [...cards].sort((a, b) => {
+    const oa = sortOrder(a, level), ob = sortOrder(b, level);
+    if (oa !== ob) return ob - oa;
+    return SUITS.indexOf(a.suit) - SUITS.indexOf(b.suit);
+  });
+}
+function makeDeck() {
+  const deck = []; let id = 0;
+  for (let d = 0; d < 2; d++) {
+    for (const suit of SUITS)
+      for (let rank = 2; rank <= 14; rank++) deck.push({ id: id++, suit, rank });
+    deck.push({ id: id++, suit: 'JOKER', jokerType: 'small', rank: 15 });
+    deck.push({ id: id++, suit: 'JOKER', jokerType: 'big', rank: 16 });
+  }
+  return deck;
+}
+function shuffle(arr, seed) {
+  const a = [...arr]; let s = seed || Date.now();
+  const rand = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i],a[j]] = [a[j],a[i]]; }
+  return a;
+}
+function dealHand(difficulty = 'medium', level = 2, seed = null) {
+  const deck = makeDeck(), shuffled = shuffle(deck, seed);
+  let hand = shuffled.slice(0, 27);
+  if (difficulty === 'easy') {
+    const rest = shuffled.slice(27);
+    const targetRank = 3 + Math.floor(Math.random() * 10);
+    const bombCards = rest.filter(c => c.suit !== 'JOKER' && c.rank === targetRank).slice(0, 4);
+    if (bombCards.length >= 4) for (let i = 0; i < 4; i++) hand[i + 10] = bombCards[i];
+    const suit = SUITS[Math.floor(Math.random() * 4)];
+    const straight = [];
+    for (let r = 5; r <= 9; r++) { const c = rest.find(c => c.suit === suit && c.rank === r && !bombCards.includes(c)); if (c) straight.push(c); }
+    if (straight.length === 5) for (let i = 0; i < 5; i++) hand[i + 20] = straight[i];
+  } else if (difficulty === 'hard') {
+    const byRank = {};
+    for (const c of hand) { const k = c.suit === 'JOKER' ? 'J'+c.jokerType : c.rank; byRank[k] = (byRank[k]||0)+1; }
+    const rest = shuffled.slice(27); let restIdx = 0;
+    for (let i = 0; i < hand.length; i++) {
+      const c = hand[i], k = c.suit === 'JOKER' ? 'J'+c.jokerType : c.rank;
+      if (byRank[k] > 2) {
+        while (restIdx < rest.length) {
+          const rc = rest[restIdx++], rk = rc.suit === 'JOKER' ? 'J'+rc.jokerType : rc.rank;
+          if ((byRank[rk]||0) < 1) { byRank[k]--; byRank[rk] = 1; hand[i] = rc; break; }
+        }
+      }
+    }
+  }
+  const seen = new Set();
+  hand = hand.filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; });
+  const rest = shuffled.filter(c => !seen.has(c.id));
+  while (hand.length < 27) hand.push(rest.shift());
+  return hand.slice(0, 27);
+}
+
+function isWild(card, level) { return card.suit === 'H' && card.rank === level; }
+function groupByRank(cards, level) {
+  const normal = [], wilds = [], jokers = [];
+  for (const c of cards) {
+    if (c.suit === 'JOKER') jokers.push(c);
+    else if (isWild(c, level)) wilds.push(c);
+    else normal.push(c);
+  }
+  const byRank = {};
+  for (const c of normal) { if (!byRank[c.rank]) byRank[c.rank] = []; byRank[c.rank].push(c); }
+  return { byRank, normal, wilds, jokers };
+}
+function playOrder(rank, level) {
+  if (rank === 'smallJoker') return 16;
+  if (rank === 'bigJoker') return 17;
+  if (rank === level) return 15;
+  return rank;
+}
+function identifyCombo(cards, level) {
+  if (!cards || cards.length === 0) return { type:'empty', valid:false, label:'无', score:0 };
+  const n = cards.length;
+  const { byRank, normal, wilds, jokers } = groupByRank(cards, level);
+  const smallJokers = jokers.filter(c => c.jokerType === 'small').length;
+  const bigJokers = jokers.filter(c => c.jokerType === 'big').length;
+  if (n === 4 && smallJokers === 2 && bigJokers === 2)
+    return { type:'jokerBomb', valid:true, label:'王炸（天王炸）', rank:100, size:4, power:200, desc:'最大牌型，压制任何其他牌型。' };
+  if (n === 1) {
+    const c = cards[0]; let r;
+    if (c.suit === 'JOKER') r = c.jokerType === 'big' ? 17 : 16;
+    else r = playOrder(c.rank, level);
+    return { type:'single', valid:true, label:'单张', rank:r, size:1, power:r };
+  }
+  if (n === 2) {
+    if (jokers.length === 2 && smallJokers === 2) return { type:'pair', valid:true, label:'对小王', rank:16, size:2, power:32 };
+    if (jokers.length === 2 && bigJokers === 2) return { type:'pair', valid:true, label:'对大王', rank:17, size:2, power:34 };
+    if (jokers.length > 0) return { type:'invalid', valid:false, label:'无效（王不能与普通牌配对）' };
+    if (normal.length === 2 && normal[0].rank === normal[1].rank)
+      return { type:'pair', valid:true, label:'对子', rank:playOrder(normal[0].rank, level), size:2, power:playOrder(normal[0].rank, level)*2 };
+    if (wilds.length === 1 && normal.length === 1)
+      return { type:'pair', valid:true, label:'对子(含癞子)', rank:playOrder(normal[0].rank, level), size:2, power:playOrder(normal[0].rank, level)*2, wild:true };
+    if (wilds.length === 2)
+      return { type:'pair', valid:true, label:'癞子对(最大rank)', rank:15, size:2, power:30, wild:true };
+    return { type:'invalid', valid:false, label:'不是对子' };
+  }
+  if (n === 3) {
+    if (jokers.length > 0) return { type:'invalid', valid:false, label:'三张不能含王' };
+    const ranks = Object.keys(byRank);
+    if (ranks.length === 1 && wilds.length === 0)
+      return { type:'triple', valid:true, label:'三张', rank:playOrder(+ranks[0], level), size:3, power:playOrder(+ranks[0], level)*3 };
+    if (ranks.length === 1 && wilds.length + byRank[ranks[0]].length === 3)
+      return { type:'triple', valid:true, label:'三张(含癞子)', rank:playOrder(+ranks[0], level), size:3, power:playOrder(+ranks[0], level)*3, wild:true };
+    if (ranks.length === 0 && wilds.length === 3)
+      return { type:'triple', valid:true, label:'癞子三张', rank:15, size:3, power:45, wild:true };
+    return { type:'invalid', valid:false, label:'不是三张' };
+  }
+  if (jokers.length === 0 && Object.keys(byRank).length <= 1) {
+    const singleRankCount = Object.keys(byRank).length === 1 ? byRank[Object.keys(byRank)[0]].length : 0;
+    if (singleRankCount + wilds.length === n && n >= 4) {
+      const r = Object.keys(byRank).length === 1 ? +Object.keys(byRank)[0] : level;
+      return { type:'bomb', valid:true, label:`${n}张炸弹`, rank:playOrder(r, level), size:n, power:100+n*10+playOrder(r, level), wild:wilds.length>0, bombSize:n };
+    }
+  }
+  if (n === 5) { const r = checkFiveCards(cards, level); if (r) return r; }
+  if (n === 6) {
+    const sp = checkSteelPlate(cards, level); if (sp) return sp;
+    const tt = checkTubeTriple(cards, level); if (tt) return tt;
+  }
+  return { type:'invalid', valid:false, label:'无法识别的牌型' };
+}
+function checkFiveCards(cards, level) {
+  const { byRank, normal, wilds, jokers } = groupByRank(cards, level);
+  if (jokers.length > 0) return { type:'invalid', valid:false, label:'5张含王无效' };
+  const ranks = Object.keys(byRank).map(Number).sort((a,b) => byRank[b].length - byRank[a].length);
+  for (const tripleRank of ranks) {
+    const remaining = ranks.filter(r => r !== tripleRank);
+    const needForTriple = 3 - byRank[tripleRank].length;
+    if (needForTriple < 0 || needForTriple > wilds.length) continue;
+    const wildsLeft = wilds.length - needForTriple;
+    for (const pairRank of remaining) {
+      const needForPair = 2 - byRank[pairRank].length;
+      if (needForPair >= 0 && needForPair === wildsLeft)
+        return { type:'threeWithTwo', valid:true, label:'三带二（葫芦）', rank:playOrder(tripleRank, level), size:5, power:80+playOrder(tripleRank, level), wild:wilds.length>0, detail:{tripleRank, pairRank} };
+    }
+  }
+  const straight = checkStraight(cards, level, 5);
+  if (straight) {
+    const nonWild = [...normal];
+    const allSameSuit = nonWild.length > 0 && nonWild.every(c => c.suit === nonWild[0].suit);
+    if (allSameSuit && wilds.length <= 1)
+      return { type:'straightFlush', valid:true, label:'同花顺', rank:straight.topRank, size:5, power:150+straight.topRank, wild:wilds.length>0 };
+    return { type:'straight', valid:true, label:'顺子', rank:straight.topRank, size:5, power:60+straight.topRank, wild:wilds.length>0 };
+  }
+  return null;
+}
+function checkStraight(cards, level, targetLen) {
+  const { byRank, wilds, jokers } = groupByRank(cards, level);
+  if (jokers.length > 0) return null;
+  const usedRanks = Object.keys(byRank).map(Number).filter(r => byRank[r].length >= 1);
+  if (usedRanks.length + wilds.length < targetLen) return null;
+  const expandedRanks = new Set(usedRanks);
+  if (expandedRanks.has(14)) expandedRanks.add(1);
+  for (let low = 1; low <= 15 - targetLen; low++) {
+    let need = 0;
+    for (let k = 0; k < targetLen; k++) if (!expandedRanks.has(low + k)) need++;
+    if (need <= wilds.length) { const topRank = low+targetLen-1 === 1 ? 14 : low+targetLen-1; return { topRank }; }
+  }
+  return null;
+}
+function checkSteelPlate(cards, level) {
+  const { byRank, wilds, jokers } = groupByRank(cards, level);
+  if (jokers.length > 0 || cards.length !== 6) return null;
+  for (let r = 2; r <= 13; r++) {
+    const c1 = (byRank[r]||[]).length, c2 = (byRank[r+1]||[]).length;
+    if (c1 <= 3 && c2 <= 3 && (3-c1)+(3-c2) === wilds.length && c1+c2+wilds.length === 6)
+      return { type:'steelPlate', valid:true, label:'钢板（AAABBB）', rank:playOrder(r+1, level), size:6, power:90+playOrder(r+1, level), wild:wilds.length>0 };
+  }
+  return null;
+}
+function checkTubeTriple(cards, level) {
+  const { byRank, wilds, jokers } = groupByRank(cards, level);
+  if (jokers.length > 0 || cards.length !== 6) return null;
+  for (let r = 2; r <= 12; r++) {
+    const c1=(byRank[r]||[]).length, c2=(byRank[r+1]||[]).length, c3=(byRank[r+2]||[]).length;
+    if (c1<=2 && c2<=2 && c3<=2 && (2-c1)+(2-c2)+(2-c3)===wilds.length && c1+c2+c3+wilds.length===6)
+      return { type:'tubeTriple', valid:true, label:'三连对（AABBCC）', rank:playOrder(r+2, level), size:6, power:70+playOrder(r+2, level), wild:wilds.length>0 };
+  }
+  return null;
+}
+const COMBO_EXPLAIN = {
+  single:'最基础的出牌单位。出单张时，保留的连续对子/顺子/炸弹更有价值。',
+  pair:'对子出得快，但要小心拆掉了顺子或连对的机会。',
+  triple:'三张（三不带）在掼蛋中偶尔使用。多数时候更适合作为三带二或钢板的基础。',
+  threeWithTwo:'葫芦（三带二）同时消耗一个三张和一个对子，是清手利器。',
+  straight:'顺子5张连续，A-K-Q-J-10是最大的顺子。拆散对子组顺子通常划算，对子越多越应考虑顺子。',
+  straightFlush:'同花顺是小炸弹级别的牌型，可以压过除同等级同花顺外的炸弹（4-5张的）。',
+  steelPlate:'钢板（两连三）非常有压制力，出完能卡死对手节奏。',
+  tubeTriple:'三连对（AABBCC）清手极快，但需要稳定的三组连续对子。',
+  bomb:'炸弹数量越多，压制力越强。4炸<5炸<6炸<同花顺<8炸...',
+  jokerBomb:'王炸是最大的牌型，压制一切，通常留在关键时刻逼走对手。',
+};
+function evaluateArrangement(groups, level) {
+  let score = 50;
+  const reasons = [];
+  let bombs = 0, majors = 0, singles = 0, pairs = 0, invalidCount = 0, totalCards = 0;
+  for (const g of groups) {
+    totalCards += g.length;
+    const combo = identifyCombo(g, level);
+    if (!combo.valid) { invalidCount++; score -= 15; reasons.push({ kind:'bad', text:`存在无效组合：${combo.label}` }); continue; }
+    switch (combo.type) {
+      case 'jokerBomb': score += 25; bombs++; reasons.push({ kind:'good', text:'保留王炸，是关键控场牌' }); break;
+      case 'bomb': score += 15+combo.bombSize*2; bombs++; reasons.push({ kind:'good', text:`${combo.bombSize}张炸弹 +${15+combo.bombSize*2} 分` }); break;
+      case 'straightFlush': score += 18; majors++; reasons.push({ kind:'good', text:'同花顺是准炸弹 +18 分' }); break;
+      case 'steelPlate': score += 14; majors++; reasons.push({ kind:'good', text:'钢板（两连三）强压制 +14 分' }); break;
+      case 'tubeTriple': score += 12; majors++; reasons.push({ kind:'good', text:'三连对清手 +12 分' }); break;
+      case 'threeWithTwo': score += 8; majors++; reasons.push({ kind:'good', text:'葫芦清手 +8 分' }); break;
+      case 'straight': score += 6; majors++; reasons.push({ kind:'good', text:'顺子 +6 分' }); break;
+      case 'triple': score += 2; reasons.push({ kind:'neutral', text:'三张（可以考虑带二）+2' }); break;
+      case 'pair': pairs++; score += 1; break;
+      case 'single': singles++;
+        if (combo.rank >= 14) { score += 2; reasons.push({ kind:'good', text:`保留大单张（${combo.rank>=16?'王':combo.rank===15?'级牌':'A'}）+2` }); }
+        else if (combo.rank <= 5) { score -= 2; reasons.push({ kind:'bad', text:`散小牌（${combo.rank}）-2，很难出` }); }
+        break;
+    }
+  }
+  if (totalCards < 27) { const left = 27-totalCards; score -= left; reasons.push({ kind:'bad', text:`还有 ${left} 张牌未组排` }); }
+  if (singles > 5) { score -= (singles-5)*3; reasons.push({ kind:'bad', text:`散牌过多(${singles}张)` }); }
+  if (bombs >= 1) reasons.push({ kind:'good', text:'有控场炸弹，适合进攻节奏' });
+  if (bombs === 0 && majors === 0) reasons.push({ kind:'bad', text:'无主力牌型，缺乏清手能力' });
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  return { score, reasons, stats: { bombs, majors, singles, pairs, invalidCount } };
+}
+function suggestArrangements(hand, level) {
+  return ['attack','clear','bomb'].map(s => suggestByStrategy(hand, level, s));
+}
+function suggestByStrategy(hand, level, strategy) {
+  let remaining = [...hand];
+  const groups = [], explain = [];
+  const sj = remaining.filter(c => c.suit === 'JOKER' && c.jokerType === 'small');
+  const bj = remaining.filter(c => c.suit === 'JOKER' && c.jokerType === 'big');
+  if (sj.length === 2 && bj.length === 2) {
+    groups.push([...sj,...bj]); explain.push('组王炸（天王炸）：2小王+2大王');
+    remaining = remaining.filter(c => !sj.includes(c) && !bj.includes(c));
+  }
+  const byRankFn = (rem) => {
+    const br = {};
+    for (const c of rem) { if (c.suit === 'JOKER' || isWild(c, level)) continue; if (!br[c.rank]) br[c.rank] = []; br[c.rank].push(c); }
+    return br;
+  };
+  let br = byRankFn(remaining);
+  const bombCandidates = [];
+  for (const rk of Object.keys(br)) { if (br[rk].length >= 4 && +rk !== level) bombCandidates.push({ rank:+rk, cards:br[rk] }); }
+  for (const b of bombCandidates) {
+    groups.push([...b.cards]); explain.push(`${b.cards.length}张炸弹：${RANK_NAMES[b.rank]}×${b.cards.length}`);
+    remaining = remaining.filter(c => !b.cards.includes(c));
+  }
+  if (strategy !== 'bomb') {
+    br = byRankFn(remaining);
+    for (let r = 2; r <= 13; r++) {
+      if ((br[r]||[]).length >= 3 && (br[r+1]||[]).length >= 3) {
+        const g = [...br[r].slice(0,3),...(br[r+1]||[]).slice(0,3)];
+        groups.push(g); explain.push(`钢板：${RANK_NAMES[r]}×3+${RANK_NAMES[r+1]}×3`);
+        remaining = remaining.filter(c => !g.includes(c)); br = byRankFn(remaining);
+      }
+    }
+  }
+  if (strategy === 'clear' || strategy === 'attack') {
+    br = byRankFn(remaining);
+    for (let r = 2; r <= 12; r++) {
+      if ((br[r]||[]).length >= 2 && (br[r+1]||[]).length >= 2 && (br[r+2]||[]).length >= 2) {
+        const g = [...(br[r]||[]).slice(0,2),...(br[r+1]||[]).slice(0,2),...(br[r+2]||[]).slice(0,2)];
+        groups.push(g); explain.push(`三连对：${RANK_NAMES[r]}×2+${RANK_NAMES[r+1]}×2+${RANK_NAMES[r+2]}×2`);
+        remaining = remaining.filter(c => !g.includes(c)); br = byRankFn(remaining);
+      }
+    }
+  }
+  if (strategy !== 'bomb') {
+    br = byRankFn(remaining);
+    for (let low = 10; low >= 1; low--) {
+      let canStart = true; const chosen = [];
+      for (let k = 0; k < 5; k++) {
+        const r = low+k === 1 ? 14 : low+k;
+        if ((br[r]||[]).length >= 1) chosen.push(br[r][0]); else { canStart = false; break; }
+      }
+      if (canStart && !chosen.some(c => c.rank === level)) {
+        groups.push(chosen); explain.push(`顺子：${chosen.map(c => RANK_NAMES[c.rank]).join('-')}`);
+        remaining = remaining.filter(c => !chosen.includes(c)); br = byRankFn(remaining);
+      }
+    }
+  }
+  if (strategy === 'clear' || strategy === 'attack') {
+    br = byRankFn(remaining);
+    const triples = Object.keys(br).filter(r => br[r].length >= 3).map(Number);
+    const pairsArr = Object.keys(br).filter(r => br[r].length >= 2).map(Number);
+    for (const t of triples) {
+      const rp = pairsArr.filter(p => p !== t && (br[p]||[]).length >= 2);
+      if (rp.length) {
+        const p = rp[0], g = [...br[t].slice(0,3),...br[p].slice(0,2)];
+        groups.push(g); explain.push(`三带二：${RANK_NAMES[t]}×3+${RANK_NAMES[p]}×2`);
+        remaining = remaining.filter(c => !g.includes(c)); br = byRankFn(remaining);
+      }
+    }
+  }
+  br = byRankFn(remaining);
+  for (const r of Object.keys(br)) {
+    if (br[r].length === 3) {
+      groups.push([...br[r]]); explain.push(`三张：${RANK_NAMES[r]}×3`);
+      remaining = remaining.filter(c => !br[r].includes(c)); br = byRankFn(remaining);
+    }
+  }
+  br = byRankFn(remaining);
+  for (const r of Object.keys(br)) {
+    while (br[r].length >= 2) { const g = br[r].splice(0,2); groups.push(g); remaining = remaining.filter(c => !g.includes(c)); }
+  }
+  for (const w of remaining.filter(c => isWild(c, level))) { groups.push([w]); remaining = remaining.filter(c => c !== w); }
+  for (const c of remaining) groups.push([c]);
+  const ev = evaluateArrangement(groups, level);
+  const name = strategy === 'attack' ? '进攻型' : strategy === 'clear' ? '清手型' : '炸弹优先';
+  const intro = strategy === 'attack' ? '保留大牌作为控制，尽可能多地组成清手牌型。'
+    : strategy === 'clear' ? '优先拆成可一次出完的牌型（三带二、三连对、钢板、顺子），加快清手速度。'
+    : '炸弹和王炸优先保留，剩余按对子/单张简化，适合进攻节奏。';
+  return { strategy, name, intro, groups, explain, evaluation: ev };
+}
+window.Gundan = { SUITS, SUIT_NAMES, SUIT_COLORS, RANK_NAMES, cardDisplay, cardShort, sortHand, sortOrder, makeDeck, shuffle, dealHand, isWild, identifyCombo, COMBO_EXPLAIN, evaluateArrangement, suggestArrangements };
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+window.SB = supabase.createClient(
+  'https://vegvvnmsblicnjilklgv.supabase.co',
+  'sb_publishable_gVosz95N7ykfbfS818zAVw_rWcuZf2W'
+);
+</script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef, useCallback } = React;
+
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+const LangCtx = React.createContext(k => k);
+
+const S = {
+  zh: {
+    appTitle:'掼蛋组排练习',
+    tabPlay:'练习', tabHistory:'历史记录', tabStats:'统计',
+    newGame:'新一局', analyze:'分析组排',
+    loginBtn:'登录', logoutBtn:'退出登录',
+    guestTitle:'掼蛋组排练习',
+    guestDesc:'练习掼蛋理牌与组排——拿到一手 27 张牌，把它们组成同花顺、炸弹、三带二等牌型，系统实时评分，帮你快速提升组排能力。',
+    guestFeatures:['27张手牌练习','实时评分 0-100','组排诊断','历史记录同步','多难度模式'],
+    guestCta:'登录 / 注册开始练习', guestTutorial:'查看教程',
+    authLoginTitle:'登录', authSignupTitle:'注册账号', authResetTitle:'找回密码',
+    authEmail:'邮箱', authPassword:'密码（至少6位）',
+    authNoAccount:'没有账号？注册', authHaveAccount:'已有账号？登录',
+    authForgot:'忘记密码', authBackLogin:'返回登录',
+    authSendEmail:'发送邮件', authRegister:'注册', authSignIn:'登录',
+    authDesc:'登录后历史记录和统计数据将保存到云端，多设备同步。',
+    authFillAll:'请填写邮箱和密码', authFillEmail:'请填写邮箱',
+    authResetSent:'重置密码邮件已发送，请检查收件箱。',
+    authSignupOk:'注册成功！可以直接登录了。',
+    tweaksTitle:'设置',
+    tweakDiff:'难度', tweakEasy:'初级', tweakMedium:'中级', tweakHard:'高级',
+    tweakEasyDesc:'手牌中预置若干成型组合。',
+    tweakMediumDesc:'自然发牌，标准训练难度。',
+    tweakHardDesc:'更多散牌，需要更灵活的取舍。',
+    tweakLevel:'级牌（当前打）', tweakLevelPfx:'打',
+    tweakLevelDesc:'红桃级牌是癞子，可代替任意普通牌。',
+    tweakTheme:'主题', tweakLight:'明亮', tweakDark:'暗色',
+    tweakSize:'卡牌大小', tweakSm:'小', tweakMd:'中',
+    tweakDisplay:'显示',
+    tweakHints:'显示牌型说明提示', tweakTimer:'开启计时挑战',
+    tweakFlush:'同花顺辅助（按花色高亮）',
+    tweakAutoSave:'所有设置自动保存。', tweakOpenTut:'打开教程',
+    groupsTitle:'已组牌组', groupsUnit: n=>`${n} 组`,
+    liveScore:'实时评分',
+    groupsEmpty:'点击底部手牌选中若干张，然后点"确认成组 ↑"，已组好的牌会出现在这里。',
+    disband:'解散',
+    selN: n=>`已选 ${n} 张`, clearSel:'清除',
+    confirmGroup:'确认成组 ↑', invalidCombo:'无效牌型',
+    flushHelper:'同花顺',
+    histTitle:'练习历史', histUnit: n=>`${n} 局`,
+    histClear:'清空记录', histEmpty:'暂无记录。完成一局练习后会在这里出现。',
+    colTime:'时间', colDiff:'难度', colLevel:'级牌', colDur:'耗时', colGroups:'组数', colScore:'得分',
+    diffEasy:'初级', diffMedium:'中级', diffHard:'高级',
+    levelPfx:'打', histReplay:'重玩',
+    statsTitle:'训练统计',
+    statPlays:'练习局数', statAvg:'平均得分', statBest:'最高得分',
+    statStreak:'当前连胜', statStreakSub:'连续得分 ≥ 70',
+    statBestStreak:'历史最佳连胜', statTrend:'近期趋势',
+    statTrendSub:'近5局 vs 前5局均分',
+    statDist:'得分分布',
+    distHigh:'优秀 ≥70', distMid:'普通 50–69', distLow:'待提高 <50',
+    statTip:'建议：每天坚持 3 局，重点关注"清手型"组排，建立对葫芦、钢板和三连对的敏感度。',
+    modalTitle:'组排分析', modalYourScore:'你当前的评分',
+    modalYourGroups:'你的当前组排', modalNoGroups:'暂未组牌',
+    modalDiag:'组排诊断', modalNoFeedback:'暂无特别评价',
+    modalPrinciples:'掼蛋核心组排原则',
+    modalSugTitle:'推荐方案', modalScore:'得分', modalExplain:'策略说明',
+    modalP:['先找关键牌：王炸、炸弹、同花顺 —— 这些优先保留。','清手牌型优先：三带二、钢板、三连对、同花顺都能一次出多张。','小对子拆顺子要慎重：如果顺子只能靠拆两三个对子凑出来，可能得不偿失。','小散牌是负担：3、4、5等小单张难出，尽量并入顺子或对子。','红桃级牌（癞子）灵活：优先补炸弹或同花顺，次选补三带二。'],
+    keepAdj:'继续调整', nextRound:'发下一局',
+    tutSkip:'跳过', tutPrev:'上一步', tutNext:'下一步 →', tutStart:'开始练习',
+    tutSteps:[
+      {title:'欢迎来到掼蛋组排练习',body:'这是一个帮助新手练习"理牌"的小工具。你会拿到一手 27 张牌，需要把它们组成掼蛋的各种牌型。'},
+      {title:'① 选牌',body:'底部的手牌区展示你的牌。鼠标悬停牌时会有高亮效果，点击会选中（变为橙色边框）。你可以选任意张，累加选择。'},
+      {title:'② 成组',body:'选好一组牌后，点"确认成组 ↑"，系统会识别牌型（对子、顺子、炸弹等）并显示牌力。'},
+      {title:'③ 解散与撤销',body:'已组好的牌可以点"解散"重新回到手牌；也可以用"撤销"或"重置"撤回操作。'},
+      {title:'④ 查看分析',body:'整理完后点"分析组排"，会看到对你组排的详细诊断。'},
+      {title:'小贴士',body:'红桃级牌是癞子，可代替任意普通牌。王炸是最强牌型。点右上角设置按钮可以调整难度、级牌、主题等。'},
+    ],
+    toastGrouped: l=>`✓ 成组：${l}`, toastInvalid: l=>`⚠️ 无效牌型：${l}`,
+  },
+  en: {
+    appTitle:'Guandan Practice',
+    tabPlay:'Play', tabHistory:'History', tabStats:'Stats',
+    newGame:'New Game', analyze:'Analyze',
+    loginBtn:'Sign In', logoutBtn:'Sign Out',
+    guestTitle:'Guandan Practice',
+    guestDesc:'Practice hand organization for Guandan — arrange 27 cards into straight flushes, bombs, full houses and more. Get scored and diagnosed in real time.',
+    guestFeatures:['27-card hands','Live scoring 0–100','Hand diagnosis','Cloud sync','Multiple difficulties'],
+    guestCta:'Sign In / Register to Play', guestTutorial:'View Tutorial',
+    authLoginTitle:'Sign In', authSignupTitle:'Create Account', authResetTitle:'Reset Password',
+    authEmail:'Email', authPassword:'Password (min 6 chars)',
+    authNoAccount:"No account? Register", authHaveAccount:'Have an account? Sign in',
+    authForgot:'Forgot password', authBackLogin:'Back to sign in',
+    authSendEmail:'Send Email', authRegister:'Register', authSignIn:'Sign In',
+    authDesc:'Sign in to sync your history and stats across devices.',
+    authFillAll:'Please enter email and password', authFillEmail:'Please enter your email',
+    authResetSent:'Password reset email sent. Check your inbox.',
+    authSignupOk:'Account created! You can now sign in.',
+    tweaksTitle:'Tweaks',
+    tweakDiff:'Difficulty', tweakEasy:'Easy', tweakMedium:'Medium', tweakHard:'Hard',
+    tweakEasyDesc:'Hand includes some pre-formed combinations.',
+    tweakMediumDesc:'Natural deal — standard training difficulty.',
+    tweakHardDesc:'More scattered cards, requiring flexible decisions.',
+    tweakLevel:'Level Card (current)', tweakLevelPfx:'Lvl',
+    tweakLevelDesc:'Red heart level card is a wild card, substituting any normal card.',
+    tweakTheme:'Theme', tweakLight:'Light', tweakDark:'Dark',
+    tweakSize:'Card Size', tweakSm:'Small', tweakMd:'Medium',
+    tweakDisplay:'Display',
+    tweakHints:'Show card type hints', tweakTimer:'Enable timer challenge',
+    tweakFlush:'Flush helper (highlight by suit)',
+    tweakAutoSave:'All settings are auto-saved.', tweakOpenTut:'Open Tutorial',
+    groupsTitle:'Groups', groupsUnit: n=>`${n} group${n===1?'':'s'}`,
+    liveScore:'Live Score',
+    groupsEmpty:'Select cards from your hand below, then tap "Confirm Group ↑" to group them.',
+    disband:'Disband',
+    selN: n=>`${n} selected`, clearSel:'Clear',
+    confirmGroup:'Confirm Group ↑', invalidCombo:'Invalid combo',
+    flushHelper:'Flush',
+    histTitle:'Practice History', histUnit: n=>`${n} game${n===1?'':'s'}`,
+    histClear:'Clear All', histEmpty:'No records yet. Complete a round to see it here.',
+    colTime:'Time', colDiff:'Diff', colLevel:'Level', colDur:'Duration', colGroups:'Groups', colScore:'Score',
+    diffEasy:'Easy', diffMedium:'Medium', diffHard:'Hard',
+    levelPfx:'Lvl', histReplay:'Replay',
+    statsTitle:'Statistics',
+    statPlays:'Games Played', statAvg:'Avg Score', statBest:'Best Score',
+    statStreak:'Current Streak', statStreakSub:'Consecutive score ≥ 70',
+    statBestStreak:'Best Streak', statTrend:'Recent Trend',
+    statTrendSub:'Recent 5 vs previous 5 avg',
+    statDist:'Score Distribution',
+    distHigh:'Excellent ≥70', distMid:'Good 50–69', distLow:'Needs Work <50',
+    statTip:'Tip: Aim for 3 rounds a day. Focus on hand-clearing combos — develop an eye for full houses, consecutive pairs, and straight flushes.',
+    modalTitle:'Hand Analysis', modalYourScore:'Your current score',
+    modalYourGroups:'Your current groups', modalNoGroups:'No groups yet',
+    modalDiag:'Diagnosis', modalNoFeedback:'No specific feedback',
+    modalPrinciples:'Core Guandan Principles',
+    modalSugTitle:'Recommended Arrangements', modalScore:'Score', modalExplain:'Strategy Breakdown',
+    modalP:['Find key cards first: Joker bomb, bombs, straight flushes — keep these intact.','Prioritize hand-clearing combos: Full house, consecutive pairs, and straight flush clear multiple cards at once.','Be careful splitting pairs for straights: Breaking 2–3 pairs to form a straight may not be worth it.','Scattered small cards are a burden: 3s, 4s, 5s are hard to play solo — fold them into straights or pairs.','Wild cards are flexible: Best used to complete bombs or straight flushes, then full houses.'],
+    keepAdj:'Keep Adjusting', nextRound:'Next Round',
+    tutSkip:'Skip', tutPrev:'Back', tutNext:'Next →', tutStart:'Start Playing',
+    tutSteps:[
+      {title:'Welcome to Guandan Practice',body:"A tool for beginners to practice hand organization. You'll receive 27 cards and need to form them into Guandan combinations."},
+      {title:'① Select Cards',body:'Your hand is shown at the bottom. Hover to highlight, click to select (orange border). You can select any number of cards.'},
+      {title:'② Form Groups',body:'After selecting, click "Confirm Group ↑" to group the cards. The system identifies the combo type (pair, straight, bomb, etc.).'},
+      {title:'③ Disband & Undo',body:'Tap "Disband" on any group to return cards to your hand. Use undo or reset to revert steps.'},
+      {title:'④ Analyze',body:'When finished, click "Analyze" for a detailed diagnosis of your arrangement.'},
+      {title:'Tips',body:'The red heart level card is a wild card. Joker bomb is the strongest combo. Tap the Settings button to adjust difficulty, level, theme, and more.'},
+    ],
+    toastGrouped: l=>`✓ Grouped: ${l}`, toastInvalid: l=>`⚠️ Invalid: ${l}`,
+  },
+};
+
+// ======== Icon (heroicons 24px outline + solid variants) ========
+const ICON_SOLID_PATHS = {
+  'squares-2x2': [['M3 6C3 4.34315 4.34315 3 6 3H8.25C9.90685 3 11.25 4.34315 11.25 6V8.25C11.25 9.90685 9.90685 11.25 8.25 11.25H6C4.34315 11.25 3 9.90685 3 8.25V6ZM12.75 6C12.75 4.34315 14.0931 3 15.75 3H18C19.6569 3 21 4.34315 21 6V8.25C21 9.90685 19.6569 11.25 18 11.25H15.75C14.0931 11.25 12.75 9.90685 12.75 8.25V6ZM3 15.75C3 14.0931 4.34315 12.75 6 12.75H8.25C9.90685 12.75 11.25 14.0931 11.25 15.75V18C11.25 19.6569 9.90685 21 8.25 21H6C4.34315 21 3 19.6569 3 18V15.75ZM12.75 15.75C12.75 14.0931 14.0931 12.75 15.75 12.75H18C19.6569 12.75 21 14.0931 21 15.75V18C21 19.6569 19.6569 21 18 21H15.75C14.0931 21 12.75 19.6569 12.75 18V15.75Z']],
+  'clock': [['M12 2.25C6.61522 2.25 2.25 6.61522 2.25 12C2.25 17.3848 6.61522 21.75 12 21.75C17.3848 21.75 21.75 17.3848 21.75 12C21.75 6.61522 17.3848 2.25 12 2.25ZM12.75 6C12.75 5.58579 12.4142 5.25 12 5.25C11.5858 5.25 11.25 5.58579 11.25 6V12C11.25 12.4142 11.5858 12.75 12 12.75H16.5C16.9142 12.75 17.25 12.4142 17.25 12C17.25 11.5858 16.9142 11.25 16.5 11.25H12.75V6Z']],
+  'chart-bar': [['M18.375 2.25C17.3395 2.25 16.5 3.08947 16.5 4.125V19.875C16.5 20.9105 17.3395 21.75 18.375 21.75H19.125C20.1605 21.75 21 20.9105 21 19.875V4.125C21 3.08947 20.1605 2.25 19.125 2.25H18.375Z', 'M9.75 8.625C9.75 7.58947 10.5895 6.75 11.625 6.75H12.375C13.4105 6.75 14.25 7.58947 14.25 8.625V19.875C14.25 20.9105 13.4105 21.75 12.375 21.75H11.625C10.5895 21.75 9.75 20.9105 9.75 19.875V8.625Z', 'M3 13.125C3 12.0895 3.83947 11.25 4.875 11.25H5.625C6.66053 11.25 7.5 12.0895 7.5 13.125V19.875C7.5 20.9105 6.66053 21.75 5.625 21.75H4.875C3.83947 21.75 3 20.9105 3 19.875V13.125Z']],
+  'cog-6-tooth': [['M11.0779 2.25C10.1613 2.25 9.37909 2.91265 9.22841 3.81675L9.04974 4.88873C9.02959 5.00964 8.93542 5.1498 8.75311 5.23747C8.40905 5.40292 8.07967 5.5938 7.7674 5.8076C7.60091 5.92159 7.43259 5.9332 7.31769 5.89015L6.29851 5.50833C5.44019 5.18678 4.4752 5.53289 4.01692 6.32666L3.09493 7.92358C2.63665 8.71736 2.8194 9.72611 3.52704 10.3087L4.36756 11.0006C4.46219 11.0785 4.53629 11.2298 4.52119 11.4307C4.50706 11.6188 4.49988 11.8086 4.49988 12C4.49988 12.1915 4.50707 12.3814 4.52121 12.5695C4.53632 12.7704 4.46221 12.9217 4.36758 12.9996L3.52704 13.6916C2.8194 14.2741 2.63665 15.2829 3.09493 16.0767L4.01692 17.6736C4.4752 18.4674 5.44019 18.8135 6.29851 18.4919L7.31791 18.11C7.43281 18.067 7.60113 18.0786 7.76761 18.1925C8.07982 18.4063 8.40913 18.5971 8.75311 18.7625C8.93542 18.8502 9.02959 18.9904 9.04974 19.1113L9.22841 20.1832C9.37909 21.0874 10.1613 21.75 11.0779 21.75H12.9219C13.8384 21.75 14.6207 21.0874 14.7713 20.1832L14.95 19.1113C14.9702 18.9904 15.0643 18.8502 15.2466 18.7625C15.5907 18.5971 15.9201 18.4062 16.2324 18.1924C16.3988 18.0784 16.5672 18.0668 16.6821 18.1098L17.7012 18.4917C18.5596 18.8132 19.5246 18.4671 19.9828 17.6733L20.9048 16.0764C21.3631 15.2826 21.1804 14.2739 20.4727 13.6913L19.6322 12.9994C19.5376 12.9215 19.4635 12.7702 19.4786 12.5693C19.4927 12.3812 19.4999 12.1914 19.4999 12C19.4999 11.8085 19.4927 11.6186 19.4785 11.4305C19.4634 11.2296 19.5375 11.0783 19.6322 11.0004L20.4727 10.3084C21.1804 9.72587 21.3631 8.71711 20.9048 7.92334L19.9828 6.32642C19.5246 5.53264 18.5596 5.18654 17.7012 5.50809L16.6818 5.89C16.5669 5.93304 16.3986 5.92144 16.2321 5.80746C15.9199 5.59371 15.5906 5.40289 15.2466 5.23747C15.0643 5.1498 14.9702 5.00964 14.95 4.88873L14.7713 3.81675C14.6207 2.91265 13.8384 2.25 12.9219 2.25H11.0779ZM12 15.75C14.0711 15.75 15.75 14.0711 15.75 12C15.75 9.92893 14.0711 8.25 12 8.25C9.92893 8.25 8.25 9.92893 8.25 12C8.25 14.0711 9.92893 15.75 12 15.75Z']],
+};
+const ICON_PATHS = {
+  'x-mark':            [['M6 18 18 6M6 6l12 12']],
+  'arrow-uturn-left':  [['M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3']],
+  'arrow-path':        [['M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.85l3.181 3.182m0-4.991v4.99']],
+  'cog-6-tooth':       [['M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z', 'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z']],
+  'eye':               [['M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z', 'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z']],
+  'eye-slash':         [['M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88']],
+  'chart-bar':         [['M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z']],
+  'trophy':            [['M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0']],
+  'fire':              [['M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z', 'M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z']],
+  'star':              [['M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z']],
+  'arrow-trending-up': [['M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941']],
+  'arrow-trending-down':[['M2.25 6 9 12.75l4.286-4.286a11.948 11.948 0 0 1 4.306 6.43l.776 2.898m0 0 3.182-5.511m-3.182 5.51-5.511-3.181']],
+  'minus':             [['M5 12h14']],
+  'squares-2x2':       [['M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z']],
+  'clock':             [['M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z']],
+  'play':              [['M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z']],
+  'check':             [['M4.5 12.75l6 6 9-13.5']],
+};
+function Icon({ name, size = 16, style = {}, className = '', solid = false }) {
+  const solidPaths = solid ? ICON_SOLID_PATHS[name] : null;
+  const paths = solidPaths || ICON_PATHS[name];
+  if (!paths) return null;
+  const isSolid = !!solidPaths;
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+      fill={isSolid ? 'currentColor' : 'none'}
+      stroke={isSolid ? 'none' : 'currentColor'}
+      strokeWidth={isSolid ? '0' : '1.5'} strokeLinecap="round" strokeLinejoin="round"
+      width={size} height={size} aria-hidden="true" className={className}
+      style={{ display:'inline-block', verticalAlign:'middle', flexShrink:0, ...style }}>
+      {paths[0].map((d, i) => <path key={i} fillRule="evenodd" clipRule="evenodd" d={d} />)}
+    </svg>
+  );
+}
+
+// ======== Card Component ========
+function Card({ card, size = 'md', level = 2, style = {}, className = '' }) {
+  const G = window.Gundan;
+  const isJoker = card.suit === 'JOKER';
+  const isWildCard = !isJoker && card.suit === 'H' && card.rank === level;
+  const color = isJoker ? (card.jokerType === 'big' ? 'red' : 'black') : G.SUIT_COLORS[card.suit];
+  const classes = ['card', size !== 'md' ? size : '', color, isJoker ? 'joker ' + card.jokerType : '', isWildCard ? 'wild' : '', className].filter(Boolean).join(' ');
+  if (isJoker) {
+    const isBig = card.jokerType === 'big';
+    // viewBox crops padding so face fills ~85% of space, matching suit symbol visual weight
+    const JFace = ({ w, h }) => (
+      <svg viewBox="4 4 32 32" width={w} height={h} style={{display:'block'}} aria-hidden="true">
+        <circle cx="20" cy="21" r="11" fill="currentColor" opacity="0.12"/>
+        <path d="M13 15 L8 9 L14 13 Z" fill="currentColor"/>
+        <path d="M27 15 L32 9 L26 13 Z" fill="currentColor"/>
+        <circle cx="20" cy="21" r="9" fill="currentColor"/>
+        <circle cx="16.5" cy="20" r="1.5" fill="#fff"/>
+        <circle cx="23.5" cy="20" r="1.5" fill="#fff"/>
+        <path d="M15 25.5 Q20 29 25 25.5" stroke="#fff" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
+      </svg>
+    );
+    const colorCls = isBig ? 'red' : 'black';
+    const cls = ['card', colorCls, 'joker', isBig ? 'big' : 'small', size !== 'md' ? size : '', className].filter(Boolean).join(' ');
+    return (
+      <div className={cls} style={style}>
+        <div className="rank-row">
+          <span className="rank">{isBig ? '大' : '小'}</span>
+          <span className="rank-suit-small"><JFace w="1em" h="1em" /></span>
+        </div>
+        <div className="big-suit"><JFace w="1em" h="1em" /></div>
+      </div>
+    );
+  }
+  const rankDisplay = G.RANK_NAMES[card.rank];
+  const suitDisplay = G.SUIT_NAMES[card.suit];
+  return (
+    <div className={classes} style={style}>
+      <div className="rank-row">
+        <span className="rank">{rankDisplay}</span>
+        <span className="rank-suit-small">{suitDisplay}</span>
+      </div>
+      <div className="big-suit">{suitDisplay}</div>
+    </div>
+  );
+}
+
+// ======== Hand Component ========
+function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level, cardSize, highlightSuit }) {
+  const G = window.Gundan;
+  const columns = useMemo(() => {
+    const buckets = {};
+    for (const c of cards) {
+      let key;
+      if (c.suit === 'JOKER') key = c.jokerType === 'big' ? 'BJ' : 'SJ';
+      else if (c.suit === 'H' && c.rank === level) key = 'W';
+      else key = String(c.rank);
+      if (!buckets[key]) buckets[key] = [];
+      buckets[key].push(c);
+    }
+    for (const k in buckets) {
+      buckets[k].sort((a, b) => ['S','H','D','C'].indexOf(a.suit) - ['S','H','D','C'].indexOf(b.suit));
+    }
+    const keyOrder = (k) => {
+      if (k === 'BJ') return 100; if (k === 'SJ') return 99;
+      if (k === 'W') return 98; if (+k === level) return 97; return +k;
+    };
+    return Object.keys(buckets).sort((a,b) => keyOrder(a) - keyOrder(b)).map(k => ({ key:k, cards:buckets[k] }));
+  }, [cards, level]);
+
+  const gridRef = useRef(null);
+  const [lasso, setLasso] = useState(null);
+  const dragData = useRef({ active:false, moved:false, startX:0, startY:0, initial:null });
+  // strip height = visible portion of a non-bottom stacked card
+  const stripH = cardSize === 'sm' ? 20 : 22;
+
+  const onMouseDown = (e) => {
+    if (e.button !== 0) return;
+    dragData.current = { active:true, moved:false, startX:e.clientX, startY:e.clientY, initial:new Set(selectedIds) };
+  };
+
+  useEffect(() => {
+    const onMove = (e) => {
+      if (!dragData.current.active) return;
+      const dx = Math.abs(e.clientX - dragData.current.startX);
+      const dy = Math.abs(e.clientY - dragData.current.startY);
+      if (!dragData.current.moved && (dx > 5 || dy > 5)) dragData.current.moved = true;
+      if (dragData.current.moved) {
+        const x1=Math.min(e.clientX,dragData.current.startX), y1=Math.min(e.clientY,dragData.current.startY);
+        const x2=Math.max(e.clientX,dragData.current.startX), y2=Math.max(e.clientY,dragData.current.startY);
+        setLasso({ x1, y1, x2, y2 });
+        const newSel = new Set(dragData.current.initial);
+        document.querySelectorAll('[data-card-id]').forEach(el => {
+          const r = el.getBoundingClientRect();
+          // Use data-vis-h to determine the card's actual visible rect for precise lasso hit-testing
+          const visH = el.getAttribute('data-vis-h');
+          const cardTop = r.top;
+          const cardBottom = visH ? r.top + parseInt(visH) : r.bottom;
+          if (r.right >= x1 && r.left <= x2 && cardBottom >= y1 && cardTop <= y2) {
+            newSel.add(+el.getAttribute('data-card-id'));
+          }
+        });
+        onSetSelection(newSel);
+      }
+    };
+    const onUp = (e) => {
+      if (!dragData.current.active) return;
+      const wasMoved = dragData.current.moved;
+      dragData.current.active = false;
+      dragData.current.moved = false;
+      setLasso(null);
+      // Click on grid background (not on a card) clears selection
+      if (!wasMoved && e.target === gridRef.current) {
+        onClearSel();
+      }
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, [onSetSelection, onClearSel]);
+
+  const handleCardClick = (e, cardId) => {
+    if (dragData.current.moved) { e.stopPropagation(); return; }
+    e.stopPropagation();
+    onToggle(cardId);
+  };
+
+  return (
+    <div className="hand-container">
+      <div className="hand-grid" ref={gridRef} onMouseDown={onMouseDown}>
+        {columns.map(col => (
+          <div key={col.key} className="hand-col">
+            {col.cards.map((card, idx) => {
+              const selected = selectedIds.has(card.id);
+              const isLast = idx === col.cards.length - 1;
+              const isWildC = card.suit === 'H' && card.rank === level;
+              const isDimmed = highlightSuit && card.suit !== highlightSuit && !isWildC;
+              const isLit = highlightSuit && (card.suit === highlightSuit || isWildC);
+              return (
+                <div key={card.id}
+                  className={`stack-card${selected ? ' selected' : ''}${isDimmed ? ' dimmed' : ''}${isLit ? ' flush-lit' : ''}`}
+                  data-card-id={card.id}
+                  data-vis-h={isLast ? undefined : stripH}
+                  onClick={e => handleCardClick(e, card.id)}
+                  style={{ zIndex: isLit ? 200 + idx : isDimmed ? idx + 1 : idx + 1 }}>
+                  <Card card={card} size={cardSize} level={level} />
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      {lasso && (
+        <div className="lasso-box" style={{ left:lasso.x1, top:lasso.y1, width:lasso.x2-lasso.x1, height:lasso.y2-lasso.y1 }} />
+      )}
+    </div>
+  );
+}
+
+// ======== HandSidebar ========
+function HandSidebar({ onUndo, onReset, canUndo, showFlushHelper, highlightSuit, onToggleSuit, level }) {
+  const t = React.useContext(LangCtx);
+  const G = window.Gundan;
+  const suits = [
+    { key:'S', sym:'♠', color:'var(--card-black)' },
+    { key:'H', sym:'♥', color:'var(--card-red)' },
+    { key:'D', sym:'♦', color:'var(--card-red)' },
+    { key:'C', sym:'♣', color:'var(--card-black)' },
+  ];
+  const levelDisplay = G.RANK_NAMES[level];
+  return (
+    <div className="hand-sidebar">
+      <div className="sidebar-level-badge">打{levelDisplay}</div>
+      <div className="sidebar-divider" />
+      <button className="sidebar-btn" onClick={onUndo} disabled={!canUndo}><Icon name="arrow-uturn-left" size={16} /></button>
+      <button className="sidebar-btn" onClick={onReset}><Icon name="arrow-path" size={16} /></button>
+      {showFlushHelper && <>
+        <div className="sidebar-divider" />
+        <div className="sidebar-section-label">{t('flushHelper')}</div>
+        {suits.map(s => (
+          <button key={s.key}
+            className={`sidebar-btn suit-btn${highlightSuit === s.key ? ' active' : ''}`}
+            style={{ color: highlightSuit === s.key ? undefined : s.color }}
+            onClick={() => onToggleSuit(s.key)}>
+            {s.sym}
+          </button>
+        ))}
+      </>}
+    </div>
+  );
+}
+
+// ======== MobileActionBar ========
+function MobileActionBar({ onUndo, onReset, canUndo, showFlushHelper, highlightSuit, onToggleSuit, level, onNewRound, onComplete, timerEnabled, elapsed }) {
+  const t = React.useContext(LangCtx);
+  const G = window.Gundan;
+  const suits = [
+    { key:'S', sym:'♠' }, { key:'H', sym:'♥' },
+    { key:'D', sym:'♦' }, { key:'C', sym:'♣' },
+  ];
+  const mm = String(Math.floor(elapsed/60)).padStart(2,'0');
+  const ss = String(elapsed%60).padStart(2,'0');
+  const levelDisplay = G.RANK_NAMES[level];
+  return (
+    <div className="mobile-action-bar">
+      <button className="mob-btn" onClick={onUndo} disabled={!canUndo} title="撤销"><Icon name="arrow-uturn-left" size={16} /></button>
+      <button className="mob-btn" onClick={onReset} title="重置"><Icon name="arrow-path" size={16} /></button>
+      {showFlushHelper && <>
+        <div className="mob-divider" />
+        {suits.map(s => (
+          <button key={s.key}
+            className={`mob-btn${highlightSuit === s.key ? ' active' : ''}`}
+            onClick={() => onToggleSuit(s.key)}>{s.sym}</button>
+        ))}
+      </>}
+      <div className="mob-spacer" />
+      <span className="mob-level">打{levelDisplay}</span>
+      {timerEnabled && <span className={`mob-timer${elapsed>120?' urgent':elapsed>60?' warning':''}`}>{mm}:{ss}</span>}
+      <div className="mob-divider" />
+      <button className="mob-btn outline-mob" onClick={onNewRound}>{t('newGame')}</button>
+      <button className="mob-btn primary-mob" onClick={onComplete}>{t('analyze')}</button>
+    </div>
+  );
+}
+
+// ======== MobileBottomNav ========
+function MobileBottomNav({ tab, setTab, showTweaks, onToggleTweaks }) {
+  const t = React.useContext(LangCtx);
+  const navItems = [
+    { key:'play', icon:'squares-2x2', label: t('tabPlay') },
+    { key:'history', icon:'clock', label: t('tabHistory') },
+    { key:'stats', icon:'chart-bar', label: t('tabStats') },
+    { key:'settings', icon:'cog-6-tooth', label: t('tweaksTitle') || '设置' },
+  ];
+  return (
+    <div className="mobile-bottom-nav">
+      {navItems.map(item => {
+        const isSettings = item.key === 'settings';
+        const isActive = isSettings ? showTweaks : tab === item.key;
+        return (
+          <button key={item.key}
+            className={`mob-nav-btn${isActive ? ' active' : ''}`}
+            onClick={() => isSettings ? onToggleTweaks() : setTab(item.key)}>
+            <Icon name={item.icon} size={22} solid={isActive} className="mob-nav-icon" style={{ display:'block' }} />
+            {item.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ======== AuthModal ========
+function AuthModal({ onClose, onSuccess, initialMode = 'login' }) {
+  const t = React.useContext(LangCtx);
+  const [mode, setMode] = useState(initialMode);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [msg, setMsg] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [showPwd, setShowPwd] = useState(false);
+  const switchMode = (m) => { setMode(m); setMsg(null); };
+  const submit = async () => {
+    if (mode === 'reset') {
+      if (!email) { setMsg({ text: t('authFillEmail'), ok: false }); return; }
+      setMsg(null); setLoading(true);
+      const { error } = await window.SB.auth.resetPasswordForEmail(email);
+      setLoading(false);
+      if (error) { setMsg({ text: error.message, ok: false }); return; }
+      setMsg({ text: t('authResetSent'), ok: true }); return;
+    }
+    if (!email || !password) { setMsg({ text: t('authFillAll'), ok: false }); return; }
+    setMsg(null); setLoading(true);
+    const { data, error } = mode === 'login'
+      ? await window.SB.auth.signInWithPassword({ email, password })
+      : await window.SB.auth.signUp({ email, password });
+    setLoading(false);
+    if (error) { setMsg({ text: error.message, ok: false }); return; }
+    if (mode === 'signup') { setMsg({ text: t('authSignupOk'), ok: true }); switchMode('login'); }
+    else { onSuccess(data.user); onClose(); }
+  };
+  const titles = { login: t('authLoginTitle'), signup: t('authSignupTitle'), reset: t('authResetTitle') };
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" style={{ maxWidth:360 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div className="modal-title">{titles[mode]}</div>
+          <button className="ghost small" onClick={onClose}><Icon name="x-mark" size={16} /></button>
+        </div>
+        <div className="modal-body">
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            <input className="auth-input" type="email" placeholder={t('authEmail')} value={email}
+              onChange={e => setEmail(e.target.value)} autoFocus />
+            {mode !== 'reset' && (
+              <div style={{ position:'relative' }}>
+                <input className="auth-input" type={showPwd ? 'text' : 'password'} placeholder={t('authPassword')} value={password}
+                  onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()}
+                  style={{ width:'100%', paddingRight:38 }} />
+                <button type="button" className="ghost small" onClick={() => setShowPwd(v => !v)}
+                  style={{ position:'absolute', right:4, top:'50%', transform:'translateY(-50%)', padding:'2px 6px', border:'none', fontSize:14, lineHeight:1, color:'var(--ink-muted)' }}>
+                  <Icon name={showPwd ? 'eye-slash' : 'eye'} size={16} />
+                </button>
+              </div>
+            )}
+            {msg && <div style={{ fontSize:13, color: msg.ok ? 'var(--good)' : 'var(--bad)' }}>{msg.text}</div>}
+            {mode === 'login' && <div style={{ fontSize:12, color:'var(--ink-faint)', lineHeight:1.5 }}>{t('authDesc')}</div>}
+          </div>
+        </div>
+        <div className="modal-footer" style={{ flexDirection:'column', gap:10, alignItems:'stretch' }}>
+          <button className="primary" onClick={submit} disabled={loading} style={{ width:'100%' }}>
+            {loading ? '...' : mode === 'login' ? t('authSignIn') : mode === 'signup' ? t('authRegister') : t('authSendEmail')}
+          </button>
+          {mode === 'login' && (
+            <div style={{ display:'flex', gap:4, justifyContent:'center', flexWrap:'wrap' }}>
+              <button className="ghost small" onClick={() => switchMode('signup')}>{t('authNoAccount')}</button>
+              <span style={{ color:'var(--line-strong)', alignSelf:'center' }}>·</span>
+              <button className="ghost small" onClick={() => switchMode('reset')}>{t('authForgot')}</button>
+            </div>
+          )}
+          {mode === 'signup' && <div style={{ textAlign:'center' }}><button className="ghost small" onClick={() => switchMode('login')}>{t('authHaveAccount')}</button></div>}
+          {mode === 'reset' && <div style={{ textAlign:'center' }}><button className="ghost small" onClick={() => switchMode('login')}>{t('authBackLogin')}</button></div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ======== DemoHand ========
+function DemoHand() {
+  const G = window.Gundan;
+  // Two demo groups that cycle: straight flush → bomb
+  const sequences = [
+    { cards:[{id:1,suit:'S',rank:5},{id:2,suit:'S',rank:6},{id:3,suit:'S',rank:7},{id:4,suit:'S',rank:8},{id:5,suit:'S',rank:9}], label:'同花顺 ♠5-9' },
+    { cards:[{id:6,suit:'S',rank:13},{id:7,suit:'H',rank:13},{id:8,suit:'D',rank:13},{id:9,suit:'C',rank:13}], label:'炸弹 KKKK' },
+    { cards:[{id:10,suit:'H',rank:7},{id:11,suit:'C',rank:7},{id:12,suit:'D',rank:7}], label:'三条 777' },
+  ];
+  const allCards = [
+    {id:1,suit:'S',rank:5},{id:2,suit:'S',rank:6},{id:3,suit:'S',rank:7},{id:4,suit:'S',rank:8},{id:5,suit:'S',rank:9},
+    {id:6,suit:'S',rank:13},{id:7,suit:'H',rank:13},{id:8,suit:'D',rank:13},{id:9,suit:'C',rank:13},
+    {id:10,suit:'H',rank:7},{id:11,suit:'C',rank:7},{id:12,suit:'D',rank:7},
+  ];
+  const n = allCards.length;
+  const [phase, setPhase] = useState(0);   // 0=idle 1=selected 2=badge
+  const [seqIdx, setSeqIdx] = useState(0);
+  const [litIds, setLitIds] = useState(new Set());
+  const [badge, setBadge] = useState(null);
+
+  useEffect(() => {
+    let t1, t2, t3;
+    const run = (si) => {
+      const seq = sequences[si % sequences.length];
+      t1 = setTimeout(() => {
+        setLitIds(new Set(seq.cards.map(c => c.id)));
+        setPhase(1);
+      }, 800);
+      t2 = setTimeout(() => {
+        setBadge(seq.label);
+        setPhase(2);
+      }, 1800);
+      t3 = setTimeout(() => {
+        setLitIds(new Set());
+        setBadge(null);
+        setPhase(0);
+        const next = (si + 1) % sequences.length;
+        setSeqIdx(next);
+        run(next);
+      }, 3600);
+    };
+    run(seqIdx);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
+
+  return (
+    <div className="demo-stage">
+      {allCards.map((card, i) => {
+        const angle = (i - (n - 1) / 2) * 7;
+        const tx = (i - (n - 1) / 2) * 13;
+        const isLit = litIds.has(card.id);
+        const lift = isLit ? 28 : 0;
+        return (
+          <div key={card.id}
+            className={`demo-card-wrap${isLit ? ' demo-lit' : ''}`}
+            style={{
+              '--a': `${angle}deg`,
+              bottom: lift,
+              left: `calc(50% + ${tx}px)`,
+              transform: `translateX(-50%) rotate(${angle}deg)`,
+              animation: `demoIn 0.5s ease ${i * 0.06}s both`,
+              zIndex: isLit ? 20 + i : i,
+            }}>
+            <Card card={card} size="sm" level={2} />
+          </div>
+        );
+      })}
+      {badge && <div key={badge} className="demo-badge">{badge}</div>}
+    </div>
+  );
+}
+
+// ======== GuestScreen ========
+function GuestScreen({ onLogin, onTutorial }) {
+  const t = React.useContext(LangCtx);
+  return (
+    <div className="guest-screen">
+      <div className="guest-hero">
+        <h1>{t('guestTitle')}</h1>
+        <p>{t('guestDesc')}</p>
+      </div>
+      <DemoHand />
+      <div className="guest-features">
+        {t('guestFeatures').map(f => (
+          <div key={f} className="guest-feature"><div className="dot"/>{f}</div>
+        ))}
+      </div>
+      <div className="guest-cta">
+        <button className="primary" onClick={onLogin}>{t('guestCta')}</button>
+        <button className="ghost" onClick={onTutorial}>{t('guestTutorial')}</button>
+      </div>
+    </div>
+  );
+}
+
+// ======== Header ========
+function Header({ tweaks, setShowTweaks, showTweaks, elapsed, tab, setTab, onNewRound, onComplete, user, onLogin, onLogout, onToggleLang }) {
+  const t = React.useContext(LangCtx);
+  const mm = String(Math.floor(elapsed/60)).padStart(2,'0');
+  const ss = String(elapsed%60).padStart(2,'0');
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    if (!showMenu) return;
+    const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showMenu]);
+  const lang = tweaks.lang || 'zh';
+  return (
+    <div className="app-header">
+      <div className="app-title">{t('appTitle')}</div>
+      {user && <div className="header-tabs">
+        {['play','history','stats'].map(k => (
+          <button key={k} className={`tab${tab===k?' active':''}`} onClick={() => setTab(k)}>
+            {t(k==='play'?'tabPlay':k==='history'?'tabHistory':'tabStats')}
+          </button>
+        ))}
+      </div>}
+      <div className="header-actions">
+        {user && tab === 'play' && <>
+          {tweaks.timerEnabled && (
+            <div className={`timer${elapsed>120?' urgent':elapsed>60?' warning':''} desktop-only`}>{mm}:{ss}</div>
+          )}
+          <button className="small desktop-only" onClick={onNewRound}>{t('newGame')}</button>
+          <button className="small primary desktop-only" onClick={onComplete}>{t('analyze')}</button>
+        </>}
+        {user && <button className={`${showTweaks ? 'primary small' : 'small'} desktop-only`} onClick={() => setShowTweaks(s => !s)}><Icon name="cog-6-tooth" size={15} /></button>}
+        <button className="ghost small" onClick={onToggleLang} style={{ fontFamily:'var(--font-mono)', minWidth:32 }}>
+          {lang === 'zh' ? 'EN' : '中'}
+        </button>
+        <div style={{ position:'relative' }} ref={menuRef}>
+          {user ? (
+            <>
+              <div className="auth-badge" onClick={() => setShowMenu(m => !m)} title={user.email}>
+                {user.email[0].toUpperCase()}
+              </div>
+              {showMenu && (
+                <div className="auth-menu">
+                  <div className="auth-menu-email">{user.email}</div>
+                  <button className="ghost small" onClick={() => { setShowMenu(false); onLogout(); }}>{t('logoutBtn')}</button>
+                </div>
+              )}
+            </>
+          ) : (
+            <button className="ghost small" onClick={onLogin}>{t('loginBtn')}</button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ======== GroupsSection ========
+function GroupsSection({ groups, level, onDismantle, arrangementEval }) {
+  const G = window.Gundan;
+  const t = React.useContext(LangCtx);
+  const score = arrangementEval?.score ?? 0;
+  const scoreColor = score >= 70 ? 'var(--good)' : score >= 50 ? 'var(--warn)' : 'var(--bad)';
+  return (
+    <div className="groups-section">
+      <div className="groups-header">
+        <div className="groups-title">
+          {t('groupsTitle')} <span className="count">{t('groupsUnit', groups.length)}</span>
+        </div>
+        <div className="live-score-bar">
+          <span className="label">{t('liveScore')}</span>
+          <div className="progress-track">
+            <div className="progress-fill" style={{ width:`${score}%`, background:scoreColor }} />
+          </div>
+          <span style={{ whiteSpace:'nowrap' }}>
+            <span className="live-score-num" style={{ color:scoreColor }}>{score}</span>
+            <span className="live-score-max">/100</span>
+          </span>
+        </div>
+      </div>
+      <div className="groups-list">
+        {groups.length === 0 && (
+          <div className="groups-empty">{t('groupsEmpty')}</div>
+        )}
+        {groups.map((g, idx) => {
+          const combo = G.identifyCombo(g, level);
+          const sorted = G.sortHand(g, level);
+          return (
+            <div key={idx} className={`group-chip${!combo.valid?' invalid':''}`}>
+              <div className="cards-row">
+                {sorted.map(c => <Card key={c.id} card={c} size="xs" level={level} />)}
+              </div>
+              <div className="group-chip-footer">
+                <span className={`group-chip-label${!combo.valid?' bad':''}`}>{combo.label}</span>
+                <button className="group-chip-dismantle" onClick={() => onDismantle(idx)}>{t('disband')}</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ======== SelectionPreview ========
+function SelectionPreview({ selectedCards, combo, onConfirm, onClear, showHints }) {
+  const G = window.Gundan;
+  const empty = selectedCards.length === 0;
+  const explain = combo.type && G.COMBO_EXPLAIN[combo.type];
+  return (
+    <div className="selection-preview" style={{ opacity: empty ? 0.5 : 1 }}>
+      <div className="info">
+        <div className={`primary-label${!combo.valid && !empty?' bad':''}`}>
+          {empty ? '尚未选牌' : (combo.valid ? `✓ ${combo.label}` : `✗ ${combo.label || '无效牌型'}`)}
+          {combo.valid && combo.power != null && (
+            <span style={{ color:'var(--ink-muted)', fontFamily:'var(--font-mono)', fontSize:12, marginLeft:10 }}>牌力 {combo.power}</span>
+          )}
+        </div>
+        {showHints && explain && combo.valid && <div className="desc">{explain}</div>}
+        {!combo.valid && !empty && <div className="desc">尝试：改选相同点数的牌组成对子/三张/炸弹，或连续5张组成顺子。</div>}
+      </div>
+      <div className="actions">
+        <button onClick={onClear} disabled={empty}>清除</button>
+        <button className="primary" onClick={onConfirm} disabled={empty}>确认成组 ↑</button>
+      </div>
+    </div>
+  );
+}
+
+// ======== TweaksPanel ========
+function TweaksPanel({ tweaks, updateTweak, onClose, onOpenTutorial }) {
+  const t = React.useContext(LangCtx);
+  const Seg = ({ keyName, options }) => (
+    <div className="segmented">
+      {options.map(o => (
+        <button key={o.value} className={tweaks[keyName] === o.value ? 'active' : ''} onClick={() => updateTweak(keyName, o.value)}>{o.label}</button>
+      ))}
+    </div>
+  );
+  const lvlLabel = r => r===11?'J':r===12?'Q':r===13?'K':r===14?'A':r;
+  return (
+    <div className="tweaks-panel">
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+        <h3 style={{ margin:0 }}>{t('tweaksTitle')}</h3>
+        <button className="ghost small" onClick={onClose}><Icon name="x-mark" size={16} /></button>
+      </div>
+      <div className="tweak-row">
+        <label>{t('tweakDiff')}</label>
+        <Seg keyName="difficulty" options={[{value:'easy',label:t('tweakEasy')},{value:'medium',label:t('tweakMedium')},{value:'hard',label:t('tweakHard')}]} />
+        <div style={{ fontSize:12, color:'var(--ink-muted)', marginTop:6 }}>
+          {tweaks.difficulty==='easy'&&t('tweakEasyDesc')}
+          {tweaks.difficulty==='medium'&&t('tweakMediumDesc')}
+          {tweaks.difficulty==='hard'&&t('tweakHardDesc')}
+        </div>
+      </div>
+      <div className="tweak-row">
+        <label>{t('tweakLevel')}</label>
+        <select value={tweaks.level} onChange={e => updateTweak('level', +e.target.value)}>
+          {[2,3,4,5,6,7,8,9,10,11,12,13,14].map(r => (
+            <option key={r} value={r}>{t('tweakLevelPfx')} {lvlLabel(r)}</option>
+          ))}
+        </select>
+        <div style={{ fontSize:12, color:'var(--ink-muted)', marginTop:6 }}>{t('tweakLevelDesc')}</div>
+      </div>
+      <div className="tweak-row">
+        <label>{t('tweakTheme')}</label>
+        <Seg keyName="theme" options={[{value:'light',label:t('tweakLight')},{value:'dark',label:t('tweakDark')}]} />
+      </div>
+      <div className="tweak-row">
+        <label>{t('tweakSize')}</label>
+        <Seg keyName="cardSize" options={[{value:'sm',label:t('tweakSm')},{value:'md',label:t('tweakMd')}]} />
+      </div>
+      <div className="tweak-row">
+        <label>{t('tweakDisplay')}</label>
+        <div className="checkbox-row">
+          <input type="checkbox" checked={tweaks.showHints} onChange={e => updateTweak('showHints', e.target.checked)} />
+          <span>{t('tweakHints')}</span>
+        </div>
+        <div className="checkbox-row" style={{ marginTop:6 }}>
+          <input type="checkbox" checked={tweaks.timerEnabled} onChange={e => updateTweak('timerEnabled', e.target.checked)} />
+          <span>{t('tweakTimer')}</span>
+        </div>
+        <div className="checkbox-row" style={{ marginTop:6 }}>
+          <input type="checkbox" checked={tweaks.showFlushHelper} onChange={e => updateTweak('showFlushHelper', e.target.checked)} />
+          <span>{t('tweakFlush')}</span>
+        </div>
+      </div>
+      <div style={{ marginTop:14, borderTop:'1px solid var(--line)', paddingTop:10, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <span style={{ fontSize:11, color:'var(--ink-faint)' }}>{t('tweakAutoSave')}</span>
+        <button className="ghost small" onClick={() => { onClose(); onOpenTutorial(); }}>{t('tweakOpenTut')}</button>
+      </div>
+    </div>
+  );
+}
+
+// ======== SuggestionsModal ========
+function GroupList({ groups, level }) {
+  const G = window.Gundan;
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+      {groups.length === 0 && <div style={{ color:'var(--ink-faint)', fontSize:13 }}>—</div>}
+      {groups.map((g, idx) => {
+        const combo = G.identifyCombo(g, level);
+        return (
+          <div key={idx} className="sug-group">
+            <div className="label" style={{ color: combo.valid ? 'var(--ink)' : 'var(--bad)', fontSize:12 }}>{combo.label}</div>
+            <div className="mini-cards">
+              {G.sortHand(g, level).map(c => <Card key={c.id} card={c} size="xs" level={level} />)}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SuggestionsModal({ userGroups, userEval, hand, level, onClose, onNewRound }) {
+  const t = React.useContext(LangCtx);
+  const G = window.Gundan;
+  const allCards = useMemo(() => [...hand, ...userGroups.flat()], [hand, userGroups]);
+  const suggestions = useMemo(() => G.suggestArrangements(allCards, level), [allCards, level]);
+  const [activeStrat, setActiveStrat] = useState(0);
+  const strat = suggestions[activeStrat];
+  const stratColors = { attack:'var(--accent)', clear:'var(--good)', bomb:'var(--warn)' };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" style={{ maxWidth:760 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">{t('modalTitle') || '组排分析'}</div>
+            <div style={{ fontSize:13, color:'var(--ink-muted)', marginTop:2 }}>
+              {t('modalYourScore')}：<strong style={{ color:'var(--accent)', fontFamily:'var(--font-mono)' }}>{userEval.score}</strong> / 100
+            </div>
+          </div>
+          <button className="ghost small" onClick={onClose}><Icon name="x-mark" size={16} /></button>
+        </div>
+        <div className="modal-body">
+          {/* Top row: user groups + diagnosis */}
+          <div className="sug-two-col" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:20 }}>
+            <div>
+              <div style={{ fontFamily:'var(--font-serif)', fontSize:14, fontWeight:600, marginBottom:8, color:'var(--ink-muted)' }}>{t('modalYourGroups')}</div>
+              <GroupList groups={userGroups} level={level} />
+            </div>
+            <div>
+              <div style={{ fontFamily:'var(--font-serif)', fontSize:14, fontWeight:600, marginBottom:8, color:'var(--ink-muted)' }}>{t('modalDiag')}</div>
+              <div className="reasons">
+                {userEval.reasons.length === 0 && <div style={{ color:'var(--ink-muted)' }}>{t('modalNoFeedback')}</div>}
+                {userEval.reasons.map((r, i) => (
+                  <div key={i} className={`reason ${r.kind}`}>
+                    <span className="bullet">{r.kind==='good'?'✓':r.kind==='bad'?'✗':'·'}</span>
+                    <span style={{ fontSize:13 }}>{r.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Strategy suggestions */}
+          <div style={{ borderTop:'1px solid var(--line)', paddingTop:16 }}>
+            <div style={{ fontFamily:'var(--font-serif)', fontSize:14, fontWeight:600, marginBottom:10, color:'var(--ink-muted)' }}>
+              {t('modalSugTitle') || '推荐方案'}
+            </div>
+            {/* Strategy tabs */}
+            <div className="sug-strat-tabs" style={{ display:'flex', gap:6, marginBottom:12 }}>
+              {suggestions.map((s, i) => (
+                <button key={i} onClick={() => setActiveStrat(i)}
+                  style={{ fontSize:13, padding:'5px 12px', borderRadius:'var(--r-sm)',
+                    background: activeStrat===i ? stratColors[s.strategy] : 'var(--bg-panel)',
+                    color: activeStrat===i ? 'white' : 'var(--ink-muted)',
+                    border: activeStrat===i ? `1px solid ${stratColors[s.strategy]}` : '1px solid var(--line)',
+                    fontWeight: activeStrat===i ? 600 : 400 }}>
+                  {s.name}
+                </button>
+              ))}
+            </div>
+            {/* Active strategy content */}
+            <div className="sug-two-col" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, background:'var(--bg-panel)', borderRadius:'var(--r-md)', padding:14 }}>
+              <div>
+                <div style={{ fontSize:12, color:'var(--ink-muted)', marginBottom:4 }}>{strat.intro}</div>
+                <div style={{ fontSize:12, color:'var(--ink-muted)', marginBottom:8 }}>
+                  {t('modalScore') || '得分'}：<strong style={{ color: stratColors[strat.strategy], fontFamily:'var(--font-mono)' }}>{strat.evaluation.score}</strong> / 100
+                </div>
+                <GroupList groups={strat.groups} level={level} />
+              </div>
+              <div>
+                <div style={{ fontFamily:'var(--font-serif)', fontSize:13, fontWeight:500, marginBottom:6, color:'var(--ink-muted)' }}>
+                  {t('modalExplain') || '策略说明'}
+                </div>
+                <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                  {strat.explain.map((e, i) => (
+                    <div key={i} style={{ fontSize:12, color:'var(--ink)', padding:'3px 0', borderBottom:'1px solid var(--line)' }}>
+                      <span style={{ color:'var(--ink-faint)', marginRight:6 }}>{i+1}.</span>{e}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button onClick={onClose}>{t('keepAdj')}</button>
+          <button className="primary" onClick={onNewRound}>{t('nextRound')}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ======== Tutorial ========
+function Tutorial({ step, setStep, onDone }) {
+  const t = React.useContext(LangCtx);
+  const steps = t('tutSteps');
+  const s = steps[step];
+  return (
+    <div className="tutorial-overlay">
+      <div className="tutorial-card">
+        <div className="step-num">{String(step+1).padStart(2,'0')} / {String(steps.length).padStart(2,'0')}</div>
+        <h2>{s.title}</h2>
+        <p>{s.body}</p>
+        <div className="dots">{steps.map((_,i) => <div key={i} className={`dot${i===step?' active':''}`} />)}</div>
+        <div className="tutorial-actions">
+          <button className="ghost" onClick={onDone}>{t('tutSkip')}</button>
+          <div style={{ display:'flex', gap:8 }}>
+            {step > 0 && <button onClick={() => setStep(step-1)}>{t('tutPrev')}</button>}
+            {step < steps.length-1 && <button className="primary" onClick={() => setStep(step+1)}>{t('tutNext')}</button>}
+            {step === steps.length-1 && <button className="primary" onClick={onDone}>{t('tutStart')}</button>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ======== HistoryPanel ========
+function HistoryPanel({ rounds, onDelete, onDeleteAll, onReplay }) {
+  const t = React.useContext(LangCtx);
+  const lvlLabel = (l) => l===11?'J':l===12?'Q':l===13?'K':l===14?'A':l;
+  const diffLabel = (d) => d==='easy'?t('diffEasy'):d==='medium'?t('diffMedium'):t('diffHard');
+  const scoreColor = (s) => s>=70?'var(--good)':s>=50?'var(--warn)':'var(--bad)';
+  return (
+    <div className="groups-section">
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+        <div className="groups-title">{t('histTitle')} <span className="count">{t('histUnit', rounds.length)}</span></div>
+        {rounds.length > 0 && <button className="ghost small" onClick={onDeleteAll} style={{ color:'var(--bad)' }}>{t('histClear')}</button>}
+      </div>
+      {rounds.length === 0 && (
+        <div style={{ color:'var(--ink-faint)', padding:30, textAlign:'center', border:'1.5px dashed var(--line-strong)', borderRadius:'var(--r-md)' }}>
+          {t('histEmpty')}
+        </div>
+      )}
+      {rounds.length > 0 && (<>
+        {/* Desktop table */}
+        <div className="history-table-wrap" style={{ overflowX:'auto' }}>
+          <table className="history-table">
+            <thead>
+              <tr>
+                <th>{t('colTime')}</th><th>{t('colDiff')}</th><th>{t('colLevel')}</th>
+                <th>{t('colDur')}</th><th>{t('colGroups')}</th><th>{t('colScore')}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rounds.map((r, i) => {
+                const d = new Date(r.date);
+                const timeStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                const mins = Math.floor(r.time/60), secs = String(r.time%60).padStart(2,'0');
+                const sc = r.score;
+                return (
+                  <tr key={i}>
+                    <td style={{ fontFamily:'var(--font-mono)', fontSize:12, color:'var(--ink-muted)', whiteSpace:'nowrap' }}>{timeStr}</td>
+                    <td>{diffLabel(r.difficulty)}</td>
+                    <td style={{ fontFamily:'var(--font-mono)' }}>{t('levelPfx')}{lvlLabel(r.level)}</td>
+                    <td style={{ fontFamily:'var(--font-mono)', fontSize:12 }}>{mins}:{secs}</td>
+                    <td style={{ fontFamily:'var(--font-mono)' }}>{r.groups}</td>
+                    <td className="score-cell" style={{ color:scoreColor(sc) }}>
+                      {sc}
+                      <span className="score-bar-inline">
+                        <span className="score-bar-inline-fill" style={{ width:`${sc}%`, background:scoreColor(sc), display:'block' }} />
+                      </span>
+                    </td>
+                    <td className="action-cell">
+                      {r.seed && <button className="small" onClick={() => onReplay(r)}>{t('histReplay')}</button>}
+                      <button className="ghost small" onClick={() => onDelete(i)} style={{ color:'var(--bad)' }}><Icon name="x-mark" size={15} /></button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {/* Mobile list */}
+        <div className="history-mobile-list">
+          {rounds.map((r, i) => {
+            const d = new Date(r.date);
+            const timeStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            const mins = Math.floor(r.time/60), secs = String(r.time%60).padStart(2,'0');
+            const sc = r.score;
+            return (
+              <div key={i} className="hist-mobile-row">
+                <div className="hist-mobile-score" style={{ color:scoreColor(sc) }}>{sc}</div>
+                <div className="hist-mobile-meta">
+                  <div className="hist-mobile-primary">
+                    <span>{diffLabel(r.difficulty)}</span>
+                    <span style={{ color:'var(--ink-muted)', fontWeight:400 }}>打{lvlLabel(r.level)}</span>
+                  </div>
+                  <div className="hist-mobile-secondary">
+                    <span>{timeStr}</span>
+                    <span>·</span>
+                    <span>{mins}:{secs}</span>
+                    <span>·</span>
+                    <span>{t('groupsUnit', r.groups)}</span>
+                  </div>
+                </div>
+                <div className="hist-mobile-actions">
+                  {r.seed && <button className="small" onClick={() => onReplay(r)}>{t('histReplay')}</button>}
+                  <button className="ghost small" onClick={() => onDelete(i)} style={{ color:'var(--bad)' }}><Icon name="x-mark" size={15} /></button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </>)}
+    </div>
+  );
+}
+
+// ======== StatsPanel ========
+function StatsPanel({ rounds }) {
+  const t = React.useContext(LangCtx);
+  // Derive all stats from rounds so they always match the displayed history
+  const plays = rounds.length;
+  const totalScore = rounds.reduce((s,r) => s+r.score, 0);
+  const avg = plays ? Math.round(totalScore/plays) : 0;
+  const bestScore = plays ? Math.max(...rounds.map(r=>r.score)) : 0;
+  let streak = 0; for (const r of rounds) { if (r.score>=70) streak++; else break; }
+  let bestStreak = 0, cur = 0;
+  for (const r of [...rounds].reverse()) { if (r.score>=70){cur++;bestStreak=Math.max(bestStreak,cur);}else cur=0; }
+  const recent5 = rounds.slice(0,5), prev5 = rounds.slice(5,10);
+  const recentAvg = recent5.length ? Math.round(recent5.reduce((a,r)=>a+r.score,0)/recent5.length) : null;
+  const prevAvg = prev5.length ? Math.round(prev5.reduce((a,r)=>a+r.score,0)/prev5.length) : null;
+  const trend = (recentAvg!==null && prevAvg!==null) ? recentAvg-prevAvg : null;
+  const high = rounds.filter(r=>r.score>=70).length;
+  const mid = rounds.filter(r=>r.score>=50&&r.score<70).length;
+  const low = rounds.filter(r=>r.score<50).length;
+  return (
+    <div className="groups-section">
+      <div className="groups-title" style={{ marginBottom:16 }}>{t('statsTitle')}</div>
+      <div className="stats-grid">
+        <div className="stat-block">
+          <div className="stat-icon"><Icon name="squares-2x2" size={22} /></div>
+          <div className="stat-num">{plays}</div>
+          <div className="stat-lbl">{t('statPlays')}</div>
+        </div>
+        <div className="stat-block">
+          <div className="stat-icon"><Icon name="chart-bar" size={22} /></div>
+          <div className="stat-num">{avg}</div>
+          <div className="stat-lbl">{t('statAvg')}</div>
+          <div className="stat-track"><div className="stat-fill" style={{ width:`${avg}%`, background:'var(--accent)' }} /></div>
+        </div>
+        <div className="stat-block">
+          <div className="stat-icon"><Icon name="trophy" size={22} style={{ color:'var(--good)' }} /></div>
+          <div className="stat-num" style={{ color:'var(--good)' }}>{bestScore}</div>
+          <div className="stat-lbl">{t('statBest')}</div>
+          <div className="stat-track"><div className="stat-fill" style={{ width:`${bestScore}%`, background:'var(--good)' }} /></div>
+        </div>
+        <div className="stat-block">
+          <div className="stat-icon"><Icon name="fire" size={22} style={{ color:'var(--accent)' }} /></div>
+          <div className="stat-num" style={{ color:'var(--accent)' }}>{streak}</div>
+          <div className="stat-lbl">{t('statStreak')}</div>
+          <div className="stat-sub">{t('statStreakSub')}</div>
+        </div>
+        <div className="stat-block">
+          <div className="stat-icon"><Icon name="star" size={22} style={{ color:'var(--warn)' }} /></div>
+          <div className="stat-num">{bestStreak}</div>
+          <div className="stat-lbl">{t('statBestStreak')}</div>
+        </div>
+        {trend !== null && (
+          <div className="stat-block">
+            <div className="stat-icon">
+              <Icon name={trend>3?'arrow-trending-up':trend<-3?'arrow-trending-down':'minus'} size={22}
+                style={{ color:trend>3?'var(--good)':trend<-3?'var(--bad)':'var(--ink-faint)' }} />
+            </div>
+            <div className="stat-num" style={{ color:trend>3?'var(--good)':trend<-3?'var(--bad)':'var(--ink-muted)' }}>
+              {trend>0?'+':''}{trend}
+            </div>
+            <div className="stat-lbl">{t('statTrend')}</div>
+            <div className="stat-sub">{t('statTrendSub')}</div>
+          </div>
+        )}
+      </div>
+      {plays > 0 && (
+        <div>
+          <div style={{ fontSize:13, fontWeight:600, marginBottom:10, color:'var(--ink)' }}>{t('statDist')}</div>
+          <div className="score-dist">
+            {[
+              {key:'distHigh',count:high,color:'var(--good)'},
+              {key:'distMid',count:mid,color:'var(--warn)'},
+              {key:'distLow',count:low,color:'var(--bad)'},
+            ].map(({key,count,color}) => (
+              <div key={key} className="dist-row">
+                <span className="dist-label">{t(key)}</span>
+                <div className="dist-bar-wrap">
+                  <div className="dist-bar-fill" style={{ width:`${plays?Math.round(count/plays*100):0}%`, background:color }} />
+                </div>
+                <span className="dist-count">{count}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop:16, fontSize:13, color:'var(--ink-muted)', lineHeight:1.6 }}>{t('statTip')}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ======== App ========
+function App() {
+  const G = window.Gundan;
+  const defaults = {
+    difficulty: 'medium', level: 2, theme: 'light',
+    cardSize: 'md', showHints: false,
+    timerEnabled: false, autoSort: true, fanLayout: true, showFlushHelper: false, lang: 'zh'
+  };
+
+  const [tweaks, setTweaks] = useState(() => {
+    try { const s = localStorage.getItem('gundan:tweaks'); return s ? { ...defaults, ...JSON.parse(s) } : defaults; }
+    catch { return defaults; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('gundan:tweaks', JSON.stringify(tweaks)); } catch {}
+    document.documentElement.setAttribute('data-theme', tweaks.theme);
+  }, [tweaks]);
+
+  const updateTweak = (key, value) => setTweaks(prev => ({ ...prev, [key]: value }));
+  const lang = tweaks.lang || 'zh';
+  const t = useCallback((key, ...args) => {
+    const v = S[lang]?.[key];
+    return typeof v === 'function' ? v(...args) : (v ?? key);
+  }, [lang]);
+
+  const [level, setLevel] = useState(tweaks.level);
+  useEffect(() => setLevel(tweaks.level), [tweaks.level]);
+
+  const [hand, setHand] = useState([]);
+  const [groups, setGroups] = useState([]);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [history, setHistory] = useState([]);
+  const [roundId, setRoundId] = useState(0);
+  const [dealSeed, setDealSeed] = useState(null);
+
+  const [tutStep, setTutStep] = useState(() => {
+    try { return localStorage.getItem('gundan:tut-done') ? -1 : 0; } catch { return 0; }
+  });
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showTweaks, setShowTweaks] = useState(false);
+  const [tab, setTab] = useState('play');
+
+  const [user, setUser] = useState(null);
+  const [showAuth, setShowAuth] = useState(false);
+
+  const [rounds, setRounds] = useState(() => {
+    try { const r = localStorage.getItem('gundan:rounds'); return r ? JSON.parse(r) : []; }
+    catch { return []; }
+  });
+  useEffect(() => { try { localStorage.setItem('gundan:rounds', JSON.stringify(rounds)); } catch {} }, [rounds]);
+
+  // ---- Supabase auth ----
+  const loadRoundsFromDB = async () => {
+    const { data } = await window.SB.from('rounds').select('*').order('created_at', { ascending: false }).limit(50);
+    if (data) setRounds(data.map(r => ({ dbId:r.id, date:r.created_at, difficulty:r.difficulty, level:r.level, score:r.score, groups:r.groups, time:r.time, seed:r.seed })));
+  };
+
+  const loadSettingsFromDB = async () => {
+    const { data } = await window.SB.from('user_settings').select('tweaks').maybeSingle();
+    if (data?.tweaks) setTweaks(t => ({ ...t, ...data.tweaks }));
+  };
+
+  const saveSettingsToDB = useCallback(debounce(async (tw, uid) => {
+    if (!uid) return;
+    await window.SB.from('user_settings').upsert({ user_id: uid, tweaks: tw, updated_at: new Date().toISOString() });
+  }, 1200), []);
+
+  const userRef = useRef(null);
+  useEffect(() => { userRef.current = user; }, [user]);
+
+  useEffect(() => {
+    if (user) saveSettingsToDB(tweaks, user.id);
+  }, [tweaks]);
+
+  useEffect(() => {
+    window.SB.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) { setUser(session.user); loadRoundsFromDB(); loadSettingsFromDB(); }
+    });
+    const { data: { subscription } } = window.SB.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        if (event === 'SIGNED_IN') { loadRoundsFromDB(); loadSettingsFromDB(); }
+      } else {
+        setUser(null);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const saveRoundToDB = async (rec) => {
+    if (!user) return null;
+    const { data } = await window.SB.from('rounds').insert({
+      user_id: user.id, difficulty: rec.difficulty, level: rec.level,
+      score: rec.score, groups: rec.groups, time: rec.time, seed: String(rec.seed),
+    }).select('id').single();
+    return data?.id ?? null;
+  };
+
+  const deleteRoundFromDB = async (dbId) => {
+    if (!user || !dbId) return;
+    await window.SB.from('rounds').delete().eq('id', dbId);
+  };
+
+  const deleteAllRoundsFromDB = async () => {
+    if (!user) return;
+    await window.SB.from('rounds').delete().eq('user_id', user.id);
+  };
+
+  const handleLogout = async () => {
+    await window.SB.auth.signOut();
+    setUser(null);
+    // restore localStorage rounds
+    try { const r = localStorage.getItem('gundan:rounds'); setRounds(r ? JSON.parse(r) : []); } catch { setRounds([]); }
+  };
+
+  const [elapsed, setElapsed] = useState(0);
+  const [timerStart, setTimerStart] = useState(null);
+  useEffect(() => {
+    if (!tweaks.timerEnabled || !timerStart) return;
+    const iv = setInterval(() => setElapsed(Math.floor((Date.now() - timerStart) / 1000)), 500);
+    return () => clearInterval(iv);
+  }, [tweaks.timerEnabled, timerStart]);
+
+  const [toast, setToast] = useState(null);
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2800); };
+
+  const pushHistory = useCallback(() => {
+    setHistory(h => [...h, { hand:[...hand], groups:groups.map(g=>[...g]), selectedIds:new Set(selectedIds) }].slice(-30));
+  }, [hand, groups, selectedIds]);
+
+  const startNewRound = (difficulty = tweaks.difficulty, seed = null, overrideLevel = null) => {
+    const actualSeed = seed || Date.now();
+    const lvl = overrideLevel || level;
+    const newHand = G.dealHand(difficulty, lvl, actualSeed);
+    setDealSeed(actualSeed);
+    setHand(newHand); setGroups([]); setSelectedIds(new Set());
+    setHistory([]); setRoundId(r => r+1);
+    setTimerStart(Date.now()); setElapsed(0);
+    if (overrideLevel) updateTweak('level', overrideLevel);
+  };
+
+  useEffect(() => { if (hand.length === 0 && groups.length === 0) startNewRound(); }, []);
+
+  const toggleSelect = (id) => setSelectedIds(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const confirmGroup = () => {
+    if (selectedIds.size === 0) return;
+    pushHistory();
+    const picked = hand.filter(c => selectedIds.has(c.id));
+    const combo = G.identifyCombo(picked, level);
+    setGroups(gs => [...gs, picked]);
+    setHand(h => h.filter(c => !selectedIds.has(c.id)));
+    setSelectedIds(new Set());
+    showToast(combo.valid ? t('toastGrouped', combo.label) : t('toastInvalid', combo.label));
+  };
+
+  const dismantleGroup = (idx) => {
+    pushHistory();
+    const g = groups[idx];
+    setHand(h => [...h, ...g]);
+    setGroups(gs => gs.filter((_,i) => i !== idx));
+  };
+
+  const undo = () => {
+    if (history.length === 0) return;
+    const last = history[history.length - 1];
+    setHand(last.hand); setGroups(last.groups); setSelectedIds(last.selectedIds);
+    setHistory(h => h.slice(0, -1));
+  };
+
+  const resetAll = () => {
+    pushHistory();
+    setHand([...hand, ...groups.flat()]);
+    setGroups([]); setSelectedIds(new Set());
+  };
+
+  const completeRound = async () => {
+    const allGroups = [...groups, ...hand.map(c => [c])];
+    const ev = G.evaluateArrangement(allGroups, level);
+    const rec = { id:roundId, date:new Date().toISOString(), difficulty:tweaks.difficulty, level, score:ev.score, time:elapsed, groups:allGroups.length, seed:dealSeed };
+    const dbId = await saveRoundToDB(rec);
+    setRounds(r => [{ ...rec, dbId }, ...r].slice(0, 50));
+    setShowSuggestions(true);
+  };
+
+  const [highlightSuit, setHighlightSuit] = useState(null);
+  const toggleHighlightSuit = (suit) => setHighlightSuit(s => s === suit ? null : suit);
+
+  const deleteRound = (idx) => {
+    const r = rounds[idx];
+    if (r?.dbId) deleteRoundFromDB(r.dbId);
+    setRounds(rs => rs.filter((_,i) => i !== idx));
+  };
+  const deleteAllRounds = () => { deleteAllRoundsFromDB(); setRounds([]); };
+  const replayRound = (r) => {
+    setTab('play');
+    startNewRound(r.difficulty, r.seed, r.level);
+  };
+
+  const selectedCards = useMemo(() => hand.filter(c => selectedIds.has(c.id)), [hand, selectedIds]);
+  const selectedCombo = useMemo(() => G.identifyCombo(selectedCards, level), [selectedCards, level]);
+  const arrangementEval = useMemo(() => G.evaluateArrangement([...groups, ...hand.map(c=>[c])], level), [groups, hand, level]);
+
+  return (
+    <LangCtx.Provider value={t}>
+    <div className="app">
+      <Header
+        tweaks={tweaks} setShowTweaks={setShowTweaks} showTweaks={showTweaks}
+        elapsed={elapsed}
+        tab={tab} setTab={setTab}
+        onNewRound={() => startNewRound()}
+        onComplete={completeRound}
+        user={user} onLogin={() => setShowAuth(true)} onLogout={handleLogout}
+        onToggleLang={() => updateTweak('lang', lang === 'zh' ? 'en' : 'zh')}
+      />
+
+      {!user ? (
+        <GuestScreen onLogin={() => setShowAuth(true)} onTutorial={() => setTutStep(0)} />
+      ) : (<>
+        <div className={`main${tab !== 'play' ? ' main-no-hand' : ''}`} onClick={e => { if (e.target === e.currentTarget) { clearSelection(); setHighlightSuit(null); } }}>
+          {tab === 'history' && <HistoryPanel rounds={rounds} onDelete={deleteRound} onDeleteAll={deleteAllRounds} onReplay={replayRound} />}
+          {tab === 'stats' && <StatsPanel rounds={rounds} />}
+          {tab === 'play' && (
+            <GroupsSection groups={groups} level={level} onDismantle={dismantleGroup} arrangementEval={arrangementEval} />
+          )}
+        </div>
+
+        {tab === 'play' && (
+          <Hand cards={hand} selectedIds={selectedIds} onToggle={toggleSelect} onSetSelection={setSelectedIds} onClearSel={clearSelection} level={level} cardSize={tweaks.cardSize} highlightSuit={highlightSuit} />
+        )}
+
+        {tab === 'play' && (
+          <HandSidebar onUndo={undo} onReset={resetAll} canUndo={history.length > 0} showFlushHelper={tweaks.showFlushHelper} highlightSuit={highlightSuit} onToggleSuit={toggleHighlightSuit} level={level} />
+        )}
+
+        {tab === 'play' && (
+          <MobileActionBar
+            onUndo={undo} onReset={resetAll} canUndo={history.length > 0}
+            showFlushHelper={tweaks.showFlushHelper} highlightSuit={highlightSuit} onToggleSuit={toggleHighlightSuit}
+            level={level} onNewRound={() => startNewRound()} onComplete={completeRound}
+            timerEnabled={tweaks.timerEnabled} elapsed={elapsed}
+          />
+        )}
+
+        <MobileBottomNav tab={tab} setTab={setTab} showTweaks={showTweaks} onToggleTweaks={() => setShowTweaks(s => !s)} />
+
+        {selectedIds.size > 0 && tab === 'play' && (
+          <div className="sel-stack">
+            <div className={`sel-combo-info ${selectedCombo.valid ? 'valid' : 'invalid'}`}>
+              {selectedCombo.valid ? selectedCombo.label : `✗ ${selectedCombo.label || t('invalidCombo')}`}
+            </div>
+            <div className="sel-pill">
+              {t('selN', selectedIds.size)}
+              <button className="ghost-light" onClick={clearSelection}>{t('clearSel')}</button>
+              <button onClick={confirmGroup} disabled={!selectedCombo.valid}>{t('confirmGroup')}</button>
+            </div>
+          </div>
+        )}
+      </>)}
+
+      {showTweaks && <TweaksPanel tweaks={tweaks} updateTweak={updateTweak} onClose={() => setShowTweaks(false)} onOpenTutorial={() => setTutStep(0)} />}
+
+      {showSuggestions && (
+        <SuggestionsModal
+          userGroups={groups}
+          userEval={arrangementEval}
+          hand={hand}
+          level={level}
+          onClose={() => setShowSuggestions(false)}
+          onNewRound={() => { setShowSuggestions(false); startNewRound(); }}
+        />
+      )}
+
+      {tutStep >= 0 && (
+        <Tutorial step={tutStep} setStep={setTutStep}
+          onDone={() => { setTutStep(-1); try { localStorage.setItem('gundan:tut-done','1'); } catch {} }} />
+      )}
+
+      {showAuth && <AuthModal onClose={() => setShowAuth(false)} onSuccess={(u) => { setUser(u); setShowAuth(false); loadRoundsFromDB(); }} />}
+
+      {toast && <div className="toast">{toast}</div>}
+    </div>
+    </LangCtx.Provider>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
