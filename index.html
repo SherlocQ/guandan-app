@@ -1863,6 +1863,7 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
   const dragData = useRef({ active:false, moved:false, startX:0, startY:0, initial:null });
   // touch gesture state: 'idle' | 'scrub' | 'scroll'
   const touchGesture = useRef({ mode:'idle', startX:0, scrollLeft:0, touched:new Set() });
+  const fingerLifted = useRef(true); // true = finger was lifted since last gesture
   // strip height = visible portion of a non-bottom stacked card
   const stripH = cardSize === 'sm' ? 20 : 22;
 
@@ -1877,8 +1878,9 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
     const target = touch.target.closest('[data-card-id]');
     if (target) {
       // Finger on a card → scrub-select mode
-      // additive=true when selections already exist: follow-up gesture only adds, never removes
-      const additive = selectedIds.size > 0;
+      // additive only when this is a follow-up gesture (finger was lifted) AND selections exist
+      const additive = fingerLifted.current && selectedIds.size > 0;
+      fingerLifted.current = false;
       const cardId = +target.dataset.cardId;
       const touched = new Set([cardId]);
       touchGesture.current = { mode:'scrub', startX:touch.clientX, scrollLeft:0, touched, additive };
@@ -1939,7 +1941,10 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
         scrollRef.current.scrollLeft = g.scrollLeft + (g.startX - touch.clientX);
       }
     };
-    const onTouchEnd = () => { touchGesture.current = { mode:'idle', startX:0, scrollLeft:0, touched:new Set() }; };
+    const onTouchEnd = () => {
+      touchGesture.current = { mode:'idle', startX:0, scrollLeft:0, touched:new Set() };
+      fingerLifted.current = true;
+    };
 
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
