@@ -1074,8 +1074,7 @@ button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
   .stat-block .stat-icon { font-size: 18px; }
   .stat-block .stat-num { font-size: 24px; }
 
-  /* Lasso disabled on touch */
-  .lasso-box { display: none; }
+  /* Lasso box: keep visible on touch for feedback */
 
   /* Toast position */
   .toast { top: 60px; font-size: 13px; padding: 8px 14px; }
@@ -1855,6 +1854,25 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
     dragData.current = { active:true, moved:false, startX:e.clientX, startY:e.clientY, initial:new Set(selectedIds) };
   };
 
+  const onTouchStart = (e) => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    dragData.current = { active:true, moved:false, startX:t.clientX, startY:t.clientY, initial:new Set(selectedIds) };
+  };
+
+  const updateSelection = (x1, y1, x2, y2) => {
+    const newSel = new Set(dragData.current.initial);
+    document.querySelectorAll('[data-card-id]').forEach(el => {
+      const r = el.getBoundingClientRect();
+      const visH = el.getAttribute('data-vis-h');
+      const cardBottom = visH ? r.top + parseInt(visH) : r.bottom;
+      if (r.right >= x1 && r.left <= x2 && cardBottom >= y1 && r.top <= y2) {
+        newSel.add(+el.getAttribute('data-card-id'));
+      }
+    });
+    onSetSelection(newSel);
+  };
+
   useEffect(() => {
     const onMove = (e) => {
       if (!dragData.current.active) return;
@@ -1865,18 +1883,7 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
         const x1=Math.min(e.clientX,dragData.current.startX), y1=Math.min(e.clientY,dragData.current.startY);
         const x2=Math.max(e.clientX,dragData.current.startX), y2=Math.max(e.clientY,dragData.current.startY);
         setLasso({ x1, y1, x2, y2 });
-        const newSel = new Set(dragData.current.initial);
-        document.querySelectorAll('[data-card-id]').forEach(el => {
-          const r = el.getBoundingClientRect();
-          // Use data-vis-h to determine the card's actual visible rect for precise lasso hit-testing
-          const visH = el.getAttribute('data-vis-h');
-          const cardTop = r.top;
-          const cardBottom = visH ? r.top + parseInt(visH) : r.bottom;
-          if (r.right >= x1 && r.left <= x2 && cardBottom >= y1 && cardTop <= y2) {
-            newSel.add(+el.getAttribute('data-card-id'));
-          }
-        });
-        onSetSelection(newSel);
+        updateSelection(x1, y1, x2, y2);
       }
     };
     const onUp = (e) => {
@@ -1885,14 +1892,37 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
       dragData.current.active = false;
       dragData.current.moved = false;
       setLasso(null);
-      // Click on grid background (not on a card) clears selection
-      if (!wasMoved && e.target === gridRef.current) {
-        onClearSel();
+      if (!wasMoved && e.target === gridRef.current) onClearSel();
+    };
+
+    const onTouchMove = (e) => {
+      if (!dragData.current.active || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      const dx = Math.abs(t.clientX - dragData.current.startX);
+      const dy = Math.abs(t.clientY - dragData.current.startY);
+      if (!dragData.current.moved && (dx > 8 || dy > 8)) dragData.current.moved = true;
+      if (dragData.current.moved) {
+        const x1=Math.min(t.clientX,dragData.current.startX), y1=Math.min(t.clientY,dragData.current.startY);
+        const x2=Math.max(t.clientX,dragData.current.startX), y2=Math.max(t.clientY,dragData.current.startY);
+        updateSelection(x1, y1, x2, y2);
       }
     };
+    const onTouchEnd = (e) => {
+      if (!dragData.current.active) return;
+      dragData.current.active = false;
+      dragData.current.moved = false;
+    };
+
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
-    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
   }, [onSetSelection, onClearSel]);
 
   const handleCardClick = (e, cardId) => {
@@ -1904,7 +1934,7 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
   return (
     <div className="hand-container">
       <div className="hand-scroll">
-        <div className="hand-grid" ref={gridRef} onMouseDown={onMouseDown}>
+        <div className="hand-grid" ref={gridRef} onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
           {columns.map(col => (
             <div key={col.key} className="hand-col">
               {col.cards.map((card, idx) => {
