@@ -1862,8 +1862,7 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
   const [lasso, setLasso] = useState(null);
   const dragData = useRef({ active:false, moved:false, startX:0, startY:0, initial:null });
   // touch gesture state: 'idle' | 'scrub' | 'scroll'
-  const touchGesture = useRef({ mode:'idle', startX:0, scrollLeft:0, lastCardId:null, additive:false, path:[] });
-  const fingerLifted = useRef(true); // true = finger was lifted since last gesture
+  const touchGesture = useRef({ mode:'idle', startX:0, scrollLeft:0, lastCardId:null, path:[] });
   // strip height = visible portion of a non-bottom stacked card
   const stripH = cardSize === 'sm' ? 20 : 22;
 
@@ -1878,15 +1877,12 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
     const target = touch.target.closest('[data-card-id]');
     if (target) {
       // Finger on a card → scrub-select mode
-      // additive only when this is a follow-up gesture (finger was lifted) AND selections exist
-      const additive = fingerLifted.current && selectedIds.size > 0;
-      fingerLifted.current = false;
       const cardId = +target.dataset.cardId;
-      touchGesture.current = { mode:'scrub', startX:touch.clientX, scrollLeft:0, lastCardId:cardId, additive, path:[cardId] };
-      onToggle(cardId, additive);
+      touchGesture.current = { mode:'scrub', startX:touch.clientX, scrollLeft:0, lastCardId:cardId, path:[cardId] };
+      onToggle(cardId);
     } else {
       // Finger on background → manual scroll mode
-      touchGesture.current = { mode:'scroll', startX:touch.clientX, scrollLeft: scrollRef.current ? scrollRef.current.scrollLeft : 0 };
+      touchGesture.current = { mode:'scroll', startX:touch.clientX, scrollLeft: scrollRef.current ? scrollRef.current.scrollLeft : 0, lastCardId:null, path:[] };
     }
   };
 
@@ -1926,18 +1922,14 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
     };
 
     const applyScrub = (g, cardId) => {
-      if (g.additive) {
-        if (!g.path.includes(cardId)) { g.path.push(cardId); onToggle(cardId, true); }
+      const idx = g.path.indexOf(cardId);
+      if (idx === -1) {
+        // New card: toggle it and append to path
+        g.path.push(cardId);
+        onToggle(cardId);
       } else {
-        const idx = g.path.indexOf(cardId);
-        if (idx === -1) {
-          // New card going forward: select/toggle it
-          g.path.push(cardId);
-          onToggle(cardId);
-        } else {
-          // Rewinding: undo all cards added after this one
-          g.path.splice(idx + 1).forEach(id => onToggle(id));
-        }
+        // Rewinding: inclusive — deselect this card and everything after it
+        g.path.splice(idx).forEach(id => onToggle(id));
       }
       g.lastCardId = cardId;
     };
@@ -1968,7 +1960,7 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
           if (cardId !== g.lastCardId) applyScrub(g, cardId);
         }
       }
-      touchGesture.current = { mode:'idle', startX:0, scrollLeft:0, lastCardId:null, additive:false, path:[] };
+      touchGesture.current = { mode:'idle', startX:0, scrollLeft:0, lastCardId:null, path:[] };
       fingerLifted.current = true;
     };
 
@@ -2960,7 +2952,7 @@ function App() {
     if (hand.length === 0 && groups.length === 0) startNewRound();
   }, []);
 
-  const toggleSelect = (id, forceSelect) => setSelectedIds(s => { const n = new Set(s); forceSelect ? n.add(id) : (n.has(id) ? n.delete(id) : n.add(id)); return n; });
+  const toggleSelect = (id) => setSelectedIds(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const clearSelection = () => setSelectedIds(new Set());
 
   const confirmGroup = () => {
