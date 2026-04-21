@@ -1877,10 +1877,12 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
     const target = touch.target.closest('[data-card-id]');
     if (target) {
       // Finger on a card → scrub-select mode
+      // additive=true when selections already exist: follow-up gesture only adds, never removes
+      const additive = selectedIds.size > 0;
       const cardId = +target.dataset.cardId;
       const touched = new Set([cardId]);
-      touchGesture.current = { mode:'scrub', startX:touch.clientX, scrollLeft:0, touched };
-      onToggle(cardId);
+      touchGesture.current = { mode:'scrub', startX:touch.clientX, scrollLeft:0, touched, additive };
+      onToggle(cardId, additive);
     } else {
       // Finger on background → manual scroll mode
       touchGesture.current = { mode:'scroll', startX:touch.clientX, scrollLeft: scrollRef.current ? scrollRef.current.scrollLeft : 0 };
@@ -1931,7 +1933,7 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
         const cardEl = el && el.closest('[data-card-id]');
         if (cardEl) {
           const cardId = +cardEl.dataset.cardId;
-          if (!g.touched.has(cardId)) { g.touched.add(cardId); onToggle(cardId); }
+          if (!g.touched.has(cardId)) { g.touched.add(cardId); onToggle(cardId, g.additive); }
         }
       } else if (g.mode === 'scroll' && scrollRef.current) {
         scrollRef.current.scrollLeft = g.scrollLeft + (g.startX - touch.clientX);
