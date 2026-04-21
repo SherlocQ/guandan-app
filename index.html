@@ -991,13 +991,13 @@ button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
   /* Hand: bottom = nav(54) + bar(46) + safe area */
   .hand-container {
     bottom: calc(100px + env(safe-area-inset-bottom, 0px));
-    height: 200px;
+    height: 230px;
   }
   /* Scroll wrapper: tall so overflow-y never clips stacked columns */
   .hand-scroll {
     position: absolute;
     bottom: 0; left: 0; right: 0;
-    height: 280px;
+    height: 320px;
     overflow-x: auto;
     overflow-y: auto;
     overscroll-behavior-x: contain;
@@ -1010,28 +1010,36 @@ button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
   }
   .hand-scroll::-webkit-scrollbar { display: none; }
   .hand-grid {
-    height: 280px;
+    height: 320px;
     min-width: max-content;
     padding: 0 8px 8px;
     gap: 2px;
     justify-content: flex-start;
     overflow: visible;
   }
-  .hand-col { width: 48px; }
-  .hand-col .stack-card { margin-top: -44px; }
+  .hand-col { width: 60px; }
+  .hand-col .stack-card { margin-top: -54px; }
   .hand-col .stack-card:first-child { margin-top: 0; }
-  .hand-col:has(.card.sm) .stack-card { margin-top: -38px; }
+  .hand-col:has(.card.sm) .stack-card { margin-top: -46px; }
 
-  /* Force sm cards in hand on mobile */
-  .hand-grid .card { width: 52px; height: 75px; padding: 3px 4px 4px; }
-  .hand-grid .card .rank { font-size: 18px; }
-  .hand-grid .card .rank-suit-small { font-size: 12px; }
-  .hand-grid .card .big-suit { font-size: 22px; }
-  .hand-grid .card .level-corner { font-size: 8px; bottom: 3px; right: 3px; }
-  .hand-grid .card.joker .rank { font-size: 16px; }
+  /* Force larger cards in hand on mobile for better tap targets */
+  .hand-grid .card { width: 64px; height: 90px; padding: 4px 5px 5px; }
+  .hand-grid .card .rank { font-size: 22px; }
+  .hand-grid .card .rank-suit-small { font-size: 14px; }
+  .hand-grid .card .big-suit { font-size: 26px; }
+  .hand-grid .card .level-corner { font-size: 10px; bottom: 4px; right: 4px; }
+  .hand-grid .card.joker .rank { font-size: 19px; }
+
+  /* Scrub-select pop animation */
+  @keyframes scrubPop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  .hand-col.scrub-pop .stack-card { animation: scrubPop 0.25s ease; }
 
   /* Selection pill: above hand + bar + nav + safe area */
-  .sel-stack { bottom: calc(308px + env(safe-area-inset-bottom, 0px)); }
+  .sel-stack { bottom: calc(338px + env(safe-area-inset-bottom, 0px)); }
 
   /* Hide desktop sidebar */
   .hand-sidebar { display: none; }
@@ -1844,8 +1852,10 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
   }, [cards, level]);
 
   const gridRef = useRef(null);
+  const scrollRef = useRef(null);
   const [lasso, setLasso] = useState(null);
   const dragData = useRef({ active:false, moved:false, startX:0, startY:0, initial:null });
+  const scrubData = useRef({ active:false, timer:null, startX:0, startY:0 });
   // strip height = visible portion of a non-bottom stacked card
   const stripH = cardSize === 'sm' ? 20 : 22;
 
@@ -1856,8 +1866,24 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
 
   const onTouchStart = (e) => {
     if (e.touches.length !== 1) return;
-    const t = e.touches[0];
-    dragData.current = { active:true, moved:false, startX:t.clientX, startY:t.clientY, initial:new Set(selectedIds) };
+    const touch = e.touches[0];
+    const target = touch.target.closest('[data-card-id]');
+    if (!target) return;
+    scrubData.current.startX = touch.clientX;
+    scrubData.current.startY = touch.clientY;
+    scrubData.current.timer = setTimeout(() => {
+      scrubData.current.timer = null;
+      scrubData.current.active = true;
+      if (scrollRef.current) scrollRef.current.style.touchAction = 'none';
+      if (navigator.vibrate) navigator.vibrate(25);
+      const cardId = +target.dataset.cardId;
+      onToggle(cardId, true);
+      const col = target.closest('.hand-col');
+      if (col) {
+        col.classList.add('scrub-pop');
+        setTimeout(() => col.classList.remove('scrub-pop'), 250);
+      }
+    }, 250);
   };
 
   const updateSelection = (x1, y1, x2, y2) => {
@@ -1896,44 +1922,61 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
     };
 
     const onTouchMove = (e) => {
-      if (!dragData.current.active || e.touches.length !== 1) return;
-      const t = e.touches[0];
-      const dx = Math.abs(t.clientX - dragData.current.startX);
-      const dy = Math.abs(t.clientY - dragData.current.startY);
-      if (!dragData.current.moved && (dx > 8 || dy > 8)) dragData.current.moved = true;
-      if (dragData.current.moved) {
-        const x1=Math.min(t.clientX,dragData.current.startX), y1=Math.min(t.clientY,dragData.current.startY);
-        const x2=Math.max(t.clientX,dragData.current.startX), y2=Math.max(t.clientY,dragData.current.startY);
-        updateSelection(x1, y1, x2, y2);
+      if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      if (scrubData.current.timer) {
+        // Cancel long-press if finger moves too much (user is scrolling)
+        const dx = Math.abs(touch.clientX - scrubData.current.startX);
+        const dy = Math.abs(touch.clientY - scrubData.current.startY);
+        if (dx > 10 || dy > 10) {
+          clearTimeout(scrubData.current.timer);
+          scrubData.current.timer = null;
+        }
+        return;
       }
+      if (!scrubData.current.active) return;
+      // Scrub mode: select any card the finger passes over
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const cardEl = el && el.closest('[data-card-id]');
+      if (cardEl) onToggle(+cardEl.dataset.cardId, true);
     };
-    const onTouchEnd = (e) => {
-      if (!dragData.current.active) return;
-      dragData.current.active = false;
-      dragData.current.moved = false;
+    const onTouchEnd = () => {
+      if (scrubData.current.timer) {
+        clearTimeout(scrubData.current.timer);
+        scrubData.current.timer = null;
+      }
+      if (scrubData.current.active) {
+        scrubData.current.active = false;
+        if (scrollRef.current) scrollRef.current.style.touchAction = '';
+      }
     };
 
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
-    window.addEventListener('touchmove', onTouchMove, { passive: true });
-    window.addEventListener('touchend', onTouchEnd);
+    if (gridRef.current) {
+      gridRef.current.addEventListener('touchmove', onTouchMove, { passive: true });
+      gridRef.current.addEventListener('touchend', onTouchEnd);
+    }
     return () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
+      if (gridRef.current) {
+        gridRef.current.removeEventListener('touchmove', onTouchMove);
+        gridRef.current.removeEventListener('touchend', onTouchEnd);
+      }
     };
-  }, [onSetSelection, onClearSel]);
+  }, [onSetSelection, onClearSel, onToggle]);
 
   const handleCardClick = (e, cardId) => {
     if (dragData.current.moved) { e.stopPropagation(); return; }
+    if (scrubData.current.active) { e.stopPropagation(); return; }
     e.stopPropagation();
     onToggle(cardId);
   };
 
   return (
     <div className="hand-container">
-      <div className="hand-scroll">
+      <div className="hand-scroll" ref={scrollRef}>
         <div className="hand-grid" ref={gridRef} onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
           {columns.map(col => (
             <div key={col.key} className="hand-col">
@@ -2884,7 +2927,7 @@ function App() {
 
   useEffect(() => { if (hand.length === 0 && groups.length === 0) startNewRound(); }, []);
 
-  const toggleSelect = (id) => setSelectedIds(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleSelect = (id, forceSelect) => setSelectedIds(s => { const n = new Set(s); forceSelect ? n.add(id) : (n.has(id) ? n.delete(id) : n.add(id)); return n; });
   const clearSelection = () => setSelectedIds(new Set());
 
   const confirmGroup = () => {
