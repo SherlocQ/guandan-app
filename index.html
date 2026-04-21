@@ -1862,7 +1862,7 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
   const [lasso, setLasso] = useState(null);
   const dragData = useRef({ active:false, moved:false, startX:0, startY:0, initial:null });
   // touch gesture state: 'idle' | 'scrub' | 'scroll'
-  const touchGesture = useRef({ mode:'idle', startX:0, scrollLeft:0, touched:new Set() });
+  const touchGesture = useRef({ mode:'idle', startX:0, scrollLeft:0, lastCardId:null, additive:false });
   const fingerLifted = useRef(true); // true = finger was lifted since last gesture
   // strip height = visible portion of a non-bottom stacked card
   const stripH = cardSize === 'sm' ? 20 : 22;
@@ -1882,8 +1882,7 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
       const additive = fingerLifted.current && selectedIds.size > 0;
       fingerLifted.current = false;
       const cardId = +target.dataset.cardId;
-      const touched = new Set([cardId]);
-      touchGesture.current = { mode:'scrub', startX:touch.clientX, scrollLeft:0, touched, additive };
+      touchGesture.current = { mode:'scrub', startX:touch.clientX, scrollLeft:0, lastCardId:cardId, additive };
       onToggle(cardId, additive);
     } else {
       // Finger on background → manual scroll mode
@@ -1935,14 +1934,14 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
         const cardEl = el && el.closest('[data-card-id]');
         if (cardEl) {
           const cardId = +cardEl.dataset.cardId;
-          if (!g.touched.has(cardId)) { g.touched.add(cardId); onToggle(cardId, g.additive); }
+          if (cardId !== g.lastCardId) { g.lastCardId = cardId; onToggle(cardId, g.additive); }
         }
       } else if (g.mode === 'scroll' && scrollRef.current) {
         scrollRef.current.scrollLeft = g.scrollLeft + (g.startX - touch.clientX);
       }
     };
     const onTouchEnd = () => {
-      touchGesture.current = { mode:'idle', startX:0, scrollLeft:0, touched:new Set() };
+      touchGesture.current = { mode:'idle', startX:0, scrollLeft:0, lastCardId:null, additive:false };
       fingerLifted.current = true;
     };
 
