@@ -1006,7 +1006,7 @@ button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
     overflow-y: auto;
     overscroll-behavior-x: contain;
     scrollbar-width: none;
-    touch-action: pan-x;
+    touch-action: none;
     display: flex;
     justify-content: flex-start;
     align-items: flex-end;
@@ -1033,14 +1033,6 @@ button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
   .hand-grid .card .big-suit { font-size: 26px; }
   .hand-grid .card .level-corner { font-size: 10px; bottom: 4px; right: 4px; }
   .hand-grid .card.joker .rank { font-size: 19px; }
-
-  /* Select mode visual indicator */
-  .hand-container.select-mode-active::before {
-    content: '';
-    position: absolute; inset: 0;
-    border-top: 2px solid var(--accent);
-    pointer-events: none; z-index: 20;
-  }
 
   /* Scrub-select pop animation */
   @keyframes scrubPop {
@@ -1843,7 +1835,7 @@ function Card({ card, size = 'md', level = 2, style = {}, className = '' }) {
 }
 
 // ======== Hand Component ========
-function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level, cardSize, highlightSuit, selectMode }) {
+function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level, cardSize, highlightSuit }) {
   const G = window.Gundan;
   const columns = useMemo(() => {
     const buckets = {};
@@ -1869,7 +1861,8 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
   const scrollRef = useRef(null);
   const [lasso, setLasso] = useState(null);
   const dragData = useRef({ active:false, moved:false, startX:0, startY:0, initial:null });
-  const touchScrubbing = useRef(false);
+  // touch gesture state: 'idle' | 'scrub' | 'scroll'
+  const touchGesture = useRef({ mode:'idle', startX:0, scrollLeft:0 });
   // strip height = visible portion of a non-bottom stacked card
   const stripH = cardSize === 'sm' ? 20 : 22;
 
@@ -1879,11 +1872,17 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
   };
 
   const onTouchStart = (e) => {
-    if (!selectMode || e.touches.length !== 1) return;
-    touchScrubbing.current = true;
+    if (e.touches.length !== 1) return;
     const touch = e.touches[0];
     const target = touch.target.closest('[data-card-id]');
-    if (target) onToggle(+target.dataset.cardId, true);
+    if (target) {
+      // Finger on a card → scrub-select mode
+      touchGesture.current = { mode:'scrub', startX:touch.clientX, scrollLeft:0 };
+      onToggle(+target.dataset.cardId, true);
+    } else {
+      // Finger on background → manual scroll mode
+      touchGesture.current = { mode:'scroll', startX:touch.clientX, scrollLeft: scrollRef.current ? scrollRef.current.scrollLeft : 0 };
+    }
   };
 
   const updateSelection = (x1, y1, x2, y2) => {
@@ -1922,13 +1921,18 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
     };
 
     const onTouchMove = (e) => {
-      if (!touchScrubbing.current || e.touches.length !== 1) return;
+      if (e.touches.length !== 1) return;
       const touch = e.touches[0];
-      const el = document.elementFromPoint(touch.clientX, touch.clientY);
-      const cardEl = el && el.closest('[data-card-id]');
-      if (cardEl) onToggle(+cardEl.dataset.cardId, true);
+      const g = touchGesture.current;
+      if (g.mode === 'scrub') {
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        const cardEl = el && el.closest('[data-card-id]');
+        if (cardEl) onToggle(+cardEl.dataset.cardId, true);
+      } else if (g.mode === 'scroll' && scrollRef.current) {
+        scrollRef.current.scrollLeft = g.scrollLeft + (g.startX - touch.clientX);
+      }
     };
-    const onTouchEnd = () => { touchScrubbing.current = false; };
+    const onTouchEnd = () => { touchGesture.current = { mode:'idle', startX:0, scrollLeft:0 }; };
 
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
@@ -1953,8 +1957,8 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
   };
 
   return (
-    <div className={`hand-container${selectMode ? ' select-mode-active' : ''}`}>
-      <div className="hand-scroll" ref={scrollRef} style={selectMode ? {touchAction:'none'} : undefined}>
+    <div className="hand-container">
+      <div className="hand-scroll" ref={scrollRef}>
         <div className="hand-grid" ref={gridRef} onMouseDown={onMouseDown} onTouchStart={onTouchStart}>
           {columns.map(col => (
             <div key={col.key} className="hand-col">
@@ -2020,7 +2024,7 @@ function HandSidebar({ onUndo, onReset, canUndo, showFlushHelper, highlightSuit,
 }
 
 // ======== MobileActionBar ========
-function MobileActionBar({ onUndo, onReset, canUndo, showFlushHelper, highlightSuit, onToggleSuit, level, onNewRound, onComplete, timerEnabled, elapsed, selectMode, onToggleSelectMode }) {
+function MobileActionBar({ onUndo, onReset, canUndo, showFlushHelper, highlightSuit, onToggleSuit, level, onNewRound, onComplete, timerEnabled, elapsed }) {
   const t = React.useContext(LangCtx);
   const G = window.Gundan;
   const suits = [
@@ -2034,7 +2038,6 @@ function MobileActionBar({ onUndo, onReset, canUndo, showFlushHelper, highlightS
     <div className="mobile-action-bar">
       <button className="mob-btn" onClick={onUndo} disabled={!canUndo} title="撤销"><Icon name="arrow-uturn-left" size={16} /></button>
       <button className="mob-btn" onClick={onReset} title="重置"><Icon name="arrow-path" size={16} /></button>
-      <button className={`mob-btn${selectMode ? ' active' : ''}`} onClick={onToggleSelectMode} title="框选模式" style={{fontSize:'13px',fontWeight:600}}>{selectMode ? '✓选' : '框选'}</button>
       {showFlushHelper && <>
         <div className="mob-divider" />
         {suits.map(s => (
@@ -2805,7 +2808,6 @@ function App() {
   const [dealSeed, setDealSeed] = useState(() => {
     try { const s = localStorage.getItem('gundan:dealSeed'); return s ? +s : null; } catch { return null; }
   });
-  const [selectMode, setSelectMode] = useState(false);
 
   const [tutStep, setTutStep] = useState(() => {
     try { return localStorage.getItem('gundan:tut-done') ? -1 : 0; } catch { return 0; }
@@ -2910,7 +2912,6 @@ function App() {
     try { localStorage.setItem('gundan:dealSeed', String(actualSeed)); } catch {}
     setHand(newHand); setGroups([]); setSelectedIds(new Set());
     setHistory([]); setRoundId(r => r+1);
-    setSelectMode(false);
     setTimerStart(Date.now()); setElapsed(0);
     if (overrideLevel) updateTweak('level', overrideLevel);
   };
@@ -2932,7 +2933,6 @@ function App() {
     setGroups(gs => [...gs, picked]);
     setHand(h => h.filter(c => !selectedIds.has(c.id)));
     setSelectedIds(new Set());
-    setSelectMode(false);
     showToast(combo.valid ? t('toastGrouped', combo.label) : t('toastInvalid', combo.label));
   };
 
@@ -3009,7 +3009,7 @@ function App() {
         </div>
 
         {tab === 'play' && (
-          <Hand cards={hand} selectedIds={selectedIds} onToggle={toggleSelect} onSetSelection={setSelectedIds} onClearSel={clearSelection} level={level} cardSize={tweaks.cardSize} highlightSuit={highlightSuit} selectMode={selectMode} />
+          <Hand cards={hand} selectedIds={selectedIds} onToggle={toggleSelect} onSetSelection={setSelectedIds} onClearSel={clearSelection} level={level} cardSize={tweaks.cardSize} highlightSuit={highlightSuit} />
         )}
 
         {tab === 'play' && (
@@ -3022,7 +3022,6 @@ function App() {
             showFlushHelper={tweaks.showFlushHelper} highlightSuit={highlightSuit} onToggleSuit={toggleHighlightSuit}
             level={level} onNewRound={() => startNewRound()} onComplete={completeRound}
             timerEnabled={tweaks.timerEnabled} elapsed={elapsed}
-            selectMode={selectMode} onToggleSelectMode={() => setSelectMode(s => !s)}
           />
         )}
 
