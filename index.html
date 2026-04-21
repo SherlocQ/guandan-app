@@ -63,6 +63,7 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+html { height: -webkit-fill-available; }
 body {
   font-family: var(--font-ui);
   background: var(--bg);
@@ -70,6 +71,7 @@ body {
   font-size: 15px;
   line-height: 1.5;
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   overflow-x: hidden;
 }
 button {
@@ -82,6 +84,8 @@ button {
   padding: 8px 14px;
   border-radius: var(--r-md);
   transition: all 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 button:hover:not(:disabled) { background: var(--bg-panel); border-color: var(--ink-muted); }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -92,7 +96,7 @@ button.ghost:hover:not(:disabled) { background: var(--bg-panel); color: var(--in
 button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
 
 /* ========= App Layout ========= */
-.app { display: flex; flex-direction: column; min-height: 100vh; position: relative; }
+.app { display: flex; flex-direction: column; min-height: 100vh; min-height: -webkit-fill-available; position: relative; }
 
 .app-header {
   display: grid;
@@ -296,16 +300,21 @@ button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
   height: 280px;
   pointer-events: none;
   z-index: 15;
+  overflow: visible;
+}
+.hand-scroll {
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: flex-end;
   padding-bottom: 14px;
+  pointer-events: auto;
 }
 .hand-grid {
   position: relative;
   width: 100%;
   height: 100%;
-  pointer-events: auto;
   display: flex;
   justify-content: center;
   align-items: flex-end;
@@ -349,6 +358,9 @@ button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
   box-shadow: 0 2px 4px rgba(30,28,25,0.15), 0 1px 2px rgba(30,28,25,0.08);
   position: relative;
   user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   display: flex;
   flex-direction: column;
   padding: 4px 6px 6px;
@@ -965,8 +977,8 @@ button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
   .header-tabs { display: none; }
   .desktop-only { display: none !important; }
 
-  /* Main content */
-  .main { padding: 12px 12px 310px; gap: 12px; }
+  /* Main content — bottom clears: hand(200) + bar(46) + nav(54) + safe area */
+  .main { padding: 12px 12px calc(316px + env(safe-area-inset-bottom, 0px)); gap: 12px; }
 
   /* Groups section: compact */
   .groups-section { padding: 10px 12px; min-height: 80px; }
@@ -976,21 +988,35 @@ button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
   .group-chip { padding: 7px 8px; }
   .groups-list { gap: 6px; }
 
-  /* Hand: sits above action bar + bottom nav (46 + 54 = 100px) */
+  /* Hand: bottom = nav(54) + bar(46) + safe area */
   .hand-container {
-    bottom: 100px;
-    height: 190px;
-    padding-bottom: 4px;
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+    height: 200px;
   }
+  /* Scroll wrapper: tall so overflow-y never clips stacked columns */
+  .hand-scroll {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 280px;
+    overflow-x: auto;
+    overflow-y: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    touch-action: pan-x;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-end;
+    padding: 0;
+  }
+  .hand-scroll::-webkit-scrollbar { display: none; }
   .hand-grid {
+    height: 280px;
+    min-width: max-content;
     padding: 0 8px 8px;
     gap: 2px;
     justify-content: flex-start;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    overflow: visible;
   }
-  .hand-grid::-webkit-scrollbar { display: none; }
   .hand-col { width: 48px; }
   .hand-col .stack-card { margin-top: -44px; }
   .hand-col .stack-card:first-child { margin-top: 0; }
@@ -1004,14 +1030,14 @@ button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
   .hand-grid .card .level-corner { font-size: 8px; bottom: 3px; right: 3px; }
   .hand-grid .card.joker .rank { font-size: 16px; }
 
-  /* Selection pill: above hand */
-  .sel-stack { bottom: 298px; }
+  /* Selection pill: above hand + bar + nav + safe area */
+  .sel-stack { bottom: calc(308px + env(safe-area-inset-bottom, 0px)); }
 
   /* Hide desktop sidebar */
   .hand-sidebar { display: none; }
 
-  /* Show mobile components */
-  .mobile-action-bar { display: flex; bottom: 54px; }
+  /* Show mobile components: action bar sits on top of nav (which includes safe area) */
+  .mobile-action-bar { display: flex; bottom: calc(54px + env(safe-area-inset-bottom, 0px)); }
   .mobile-bottom-nav { display: flex; }
 
   /* Modals: full-width */
@@ -1029,6 +1055,9 @@ button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
 
   /* Auth menu */
   .auth-menu { right: 0; }
+
+  /* Prevent iOS zoom on input focus (requires font-size >= 16px) */
+  .auth-input, select, input[type="number"] { font-size: 16px; }
 
   /* Tutorial: tighter padding */
   .tutorial-overlay { padding: 16px; }
@@ -1874,28 +1903,30 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
 
   return (
     <div className="hand-container">
-      <div className="hand-grid" ref={gridRef} onMouseDown={onMouseDown}>
-        {columns.map(col => (
-          <div key={col.key} className="hand-col">
-            {col.cards.map((card, idx) => {
-              const selected = selectedIds.has(card.id);
-              const isLast = idx === col.cards.length - 1;
-              const isWildC = card.suit === 'H' && card.rank === level;
-              const isDimmed = highlightSuit && card.suit !== highlightSuit && !isWildC;
-              const isLit = highlightSuit && (card.suit === highlightSuit || isWildC);
-              return (
-                <div key={card.id}
-                  className={`stack-card${selected ? ' selected' : ''}${isDimmed ? ' dimmed' : ''}${isLit ? ' flush-lit' : ''}`}
-                  data-card-id={card.id}
-                  data-vis-h={isLast ? undefined : stripH}
-                  onClick={e => handleCardClick(e, card.id)}
-                  style={{ zIndex: isLit ? 200 + idx : isDimmed ? idx + 1 : idx + 1 }}>
-                  <Card card={card} size={cardSize} level={level} />
-                </div>
-              );
-            })}
-          </div>
-        ))}
+      <div className="hand-scroll">
+        <div className="hand-grid" ref={gridRef} onMouseDown={onMouseDown}>
+          {columns.map(col => (
+            <div key={col.key} className="hand-col">
+              {col.cards.map((card, idx) => {
+                const selected = selectedIds.has(card.id);
+                const isLast = idx === col.cards.length - 1;
+                const isWildC = card.suit === 'H' && card.rank === level;
+                const isDimmed = highlightSuit && card.suit !== highlightSuit && !isWildC;
+                const isLit = highlightSuit && (card.suit === highlightSuit || isWildC);
+                return (
+                  <div key={card.id}
+                    className={`stack-card${selected ? ' selected' : ''}${isDimmed ? ' dimmed' : ''}${isLit ? ' flush-lit' : ''}`}
+                    data-card-id={card.id}
+                    data-vis-h={isLast ? undefined : stripH}
+                    onClick={e => handleCardClick(e, card.id)}
+                    style={{ zIndex: isLit ? 200 + idx : isDimmed ? idx + 1 : idx + 1 }}>
+                    <Card card={card} size={cardSize} level={level} />
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
       {lasso && (
         <div className="lasso-box" style={{ left:lasso.x1, top:lasso.y1, width:lasso.x2-lasso.x1, height:lasso.y2-lasso.y1 }} />
