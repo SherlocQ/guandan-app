@@ -1940,7 +1940,17 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
         scrollRef.current.scrollLeft = g.scrollLeft + (g.startX - touch.clientX);
       }
     };
-    const onTouchEnd = () => {
+    const onTouchEnd = (e) => {
+      const g = touchGesture.current;
+      if (g.mode === 'scrub' && e.changedTouches.length === 1) {
+        const touch = e.changedTouches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        const cardEl = el && el.closest('[data-card-id]');
+        if (cardEl) {
+          const cardId = +cardEl.dataset.cardId;
+          if (cardId !== g.lastCardId) { onToggle(cardId, g.additive); }
+        }
+      }
       touchGesture.current = { mode:'idle', startX:0, scrollLeft:0, lastCardId:null, additive:false };
       fingerLifted.current = true;
     };
