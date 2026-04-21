@@ -1050,8 +1050,8 @@ button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
   .sug-two-col { grid-template-columns: 1fr !important; }
   .sug-strat-tabs { flex-wrap: wrap; }
 
-  /* Tweaks panel: full width */
-  .tweaks-panel { width: calc(100vw - 28px); right: 14px; top: 56px; }
+  /* Tweaks panel: hidden on mobile (settings is a page via bottom nav) */
+  .tweaks-panel { display: none !important; }
 
   /* Auth menu */
   .auth-menu { right: 0; }
@@ -2002,7 +2002,7 @@ function MobileActionBar({ onUndo, onReset, canUndo, showFlushHelper, highlightS
 }
 
 // ======== MobileBottomNav ========
-function MobileBottomNav({ tab, setTab, showTweaks, onToggleTweaks }) {
+function MobileBottomNav({ tab, setTab }) {
   const t = React.useContext(LangCtx);
   const navItems = [
     { key:'play', icon:'squares-2x2', label: t('tabPlay') },
@@ -2012,18 +2012,14 @@ function MobileBottomNav({ tab, setTab, showTweaks, onToggleTweaks }) {
   ];
   return (
     <div className="mobile-bottom-nav">
-      {navItems.map(item => {
-        const isSettings = item.key === 'settings';
-        const isActive = isSettings ? showTweaks : tab === item.key;
-        return (
-          <button key={item.key}
-            className={`mob-nav-btn${isActive ? ' active' : ''}`}
-            onClick={() => isSettings ? onToggleTweaks() : setTab(item.key)}>
-            <Icon name={item.icon} size={22} solid={isActive} className="mob-nav-icon" style={{ display:'block' }} />
-            {item.label}
-          </button>
-        );
-      })}
+      {navItems.map(item => (
+        <button key={item.key}
+          className={`mob-nav-btn${tab === item.key ? ' active' : ''}`}
+          onClick={() => setTab(item.key)}>
+          <Icon name={item.icon} size={22} solid={tab === item.key} className="mob-nav-icon" style={{ display:'block' }} />
+          {item.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -2329,7 +2325,7 @@ function SelectionPreview({ selectedCards, combo, onConfirm, onClear, showHints 
 }
 
 // ======== TweaksPanel ========
-function TweaksPanel({ tweaks, updateTweak, onClose, onOpenTutorial }) {
+function TweaksPanel({ tweaks, updateTweak, onClose, onOpenTutorial, inline = false }) {
   const t = React.useContext(LangCtx);
   const Seg = ({ keyName, options }) => (
     <div className="segmented">
@@ -2340,10 +2336,10 @@ function TweaksPanel({ tweaks, updateTweak, onClose, onOpenTutorial }) {
   );
   const lvlLabel = r => r===11?'J':r===12?'Q':r===13?'K':r===14?'A':r;
   return (
-    <div className="tweaks-panel">
+    <div className={inline ? 'groups-section' : 'tweaks-panel'}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
         <h3 style={{ margin:0 }}>{t('tweaksTitle')}</h3>
-        <button className="ghost small" onClick={onClose}><Icon name="x-mark" size={16} /></button>
+        {!inline && <button className="ghost small" onClick={onClose}><Icon name="x-mark" size={16} /></button>}
       </div>
       <div className="tweak-row">
         <label>{t('tweakDiff')}</label>
@@ -2938,6 +2934,7 @@ function App() {
         <div className={`main${tab !== 'play' ? ' main-no-hand' : ''}`} onClick={e => { if (e.target === e.currentTarget) { clearSelection(); setHighlightSuit(null); } }}>
           {tab === 'history' && <HistoryPanel rounds={rounds} onDelete={deleteRound} onDeleteAll={deleteAllRounds} onReplay={replayRound} />}
           {tab === 'stats' && <StatsPanel rounds={rounds} />}
+          {tab === 'settings' && <TweaksPanel tweaks={tweaks} updateTweak={updateTweak} onClose={() => setTab('play')} onOpenTutorial={() => setTutStep(0)} inline />}
           {tab === 'play' && (
             <GroupsSection groups={groups} level={level} onDismantle={dismantleGroup} arrangementEval={arrangementEval} />
           )}
@@ -2960,7 +2957,7 @@ function App() {
           />
         )}
 
-        <MobileBottomNav tab={tab} setTab={setTab} showTweaks={showTweaks} onToggleTweaks={() => setShowTweaks(s => !s)} />
+        <MobileBottomNav tab={tab} setTab={setTab} />
 
         {selectedIds.size > 0 && tab === 'play' && (
           <div className="sel-stack">
