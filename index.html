@@ -870,6 +870,7 @@ button.small { padding: 4px 10px; font-size: 13px; border-radius: var(--r-sm); }
   line-height: 1.2;
 }
 /* Dimmed card when flush helper active */
+.stack-card.dimmed { pointer-events: none; }
 .stack-card.dimmed .card {
   opacity: 0.28;
   filter: saturate(0.2);
@@ -1863,6 +1864,7 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
   const dragData = useRef({ active:false, moved:false, startX:0, startY:0, initial:null });
   // touch gesture state: 'idle' | 'scrub' | 'scroll'
   const touchGesture = useRef({ mode:'idle', startX:0, scrollLeft:0, lastCardId:null, path:[] });
+  const lastTouchTime = useRef(0);
   // strip height = visible portion of a non-bottom stacked card
   const stripH = cardSize === 'sm' ? 20 : 22;
 
@@ -1873,6 +1875,7 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
 
   const onTouchStart = (e) => {
     if (e.touches.length !== 1) return;
+    lastTouchTime.current = Date.now();
     const touch = e.touches[0];
     const target = touch.target.closest('[data-card-id]');
     if (target) {
@@ -1941,7 +1944,7 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
       if (g.mode === 'scrub') {
         const el = document.elementFromPoint(touch.clientX, touch.clientY);
         const cardEl = el && el.closest('[data-card-id]');
-        if (cardEl) {
+        if (cardEl && !cardEl.classList.contains('dimmed')) {
           const cardId = +cardEl.dataset.cardId;
           if (cardId !== g.lastCardId) applyScrub(g, cardId);
         }
@@ -1955,13 +1958,12 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
         const touch = e.changedTouches[0];
         const el = document.elementFromPoint(touch.clientX, touch.clientY);
         const cardEl = el && el.closest('[data-card-id]');
-        if (cardEl) {
+        if (cardEl && !cardEl.classList.contains('dimmed')) {
           const cardId = +cardEl.dataset.cardId;
           if (cardId !== g.lastCardId) applyScrub(g, cardId);
         }
       }
       touchGesture.current = { mode:'idle', startX:0, scrollLeft:0, lastCardId:null, path:[] };
-      fingerLifted.current = true;
     };
 
     window.addEventListener('mousemove', onMove);
@@ -1982,6 +1984,8 @@ function Hand({ cards, selectedIds, onToggle, onSetSelection, onClearSel, level,
 
   const handleCardClick = (e, cardId) => {
     if (dragData.current.moved) { e.stopPropagation(); return; }
+    // Skip synthetic click fired by browser after touchend
+    if (Date.now() - lastTouchTime.current < 500) { e.stopPropagation(); return; }
     e.stopPropagation();
     onToggle(cardId);
   };
